@@ -1,0 +1,70 @@
+# ── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Entorno virtual
+backend/venv/
+venv/
+.venv/
+env/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# ── Node.js / Next.js ──────────────────────────────────────
+frontend/node_modules/
+node_modules/
+frontend/.next/
+.next/
+frontend/out/
+out/
+
+# ── Variables de entorno / Secretos ───────────────────────
+.env
+.env.local
+.env.*.local
+backend/.env
+# .env.example SÍ se sube (sin valores reales)
+
+# ── Docker ─────────────────────────────────────────────────
+# Los Dockerfiles SÍ se suben; solo ignorar datos persistentes
+postgres_data/
+minio_data/
+
+# ── Reportes de pruebas (generados) ───────────────────────
+tests/reports/
+
+# ── Herramientas de desarrollo de Claude Code ─────────────
+impeccable/
+ui-ux-pro-max/
+.agents/
+skills-lock.json
+
+# ── IDE / SO ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Archivos temporales ───────────────────────────────────
+*.tmp
+*.temp
+tmp/
