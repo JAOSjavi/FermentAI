@@ -13,21 +13,23 @@ export default function SubirPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard/mis-aportes"><ArrowLeft className="h-4 w-4" /></Link>
+          <Link href="/dashboard/mis-aportes">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Subir Dataset</h1>
-          <p className="text-muted-foreground">Carga un ZIP con imágenes y metadatos HPLC</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">Subir Dataset</h1>
+          <p className="text-sm text-muted-foreground">Carga un ZIP con imágenes y metadatos HPLC</p>
         </div>
       </div>
 
-      <Card className="border-coffee-200 bg-coffee-50/50">
+      <Card className="border-indigo-200 bg-indigo-50/50">
         <CardContent className="p-4">
-          <div className="flex gap-2">
-            <Info className="h-5 w-5 text-coffee-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-coffee-800 space-y-1">
+          <div className="flex gap-3">
+            <Info className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-indigo-800 space-y-1">
               <p className="font-semibold">Estructura requerida del ZIP:</p>
-              <code className="block bg-coffee-100 rounded px-2 py-1 text-xs font-mono">
+              <code className="block bg-indigo-100 rounded-lg px-3 py-2 text-xs font-mono leading-relaxed">
                 FERM01/<br />
                 ├── imagenes/<br />
                 │   ├── FERM01_20240101_120000.jpg<br />
@@ -42,9 +44,9 @@ export default function SubirPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-slate-100">
         <CardHeader>
-          <CardTitle>Seleccionar Archivo</CardTitle>
+          <CardTitle className="font-display">Seleccionar Archivo</CardTitle>
           <CardDescription>
             Tu aporte será revisado por un investigador antes de ser publicado.
           </CardDescription>

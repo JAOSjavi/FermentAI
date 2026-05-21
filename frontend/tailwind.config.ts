@@ -69,6 +69,7 @@ const config: Config = {
         "fade-in":        "fadeIn 0.3s ease-out both",
         "role-stripe":    "roleStripe 0.5s ease-out both",
         "stat-pop":       "statPop 0.4s ease-out both",
+        "drawer-slide":   "drawerSlide 0.25s ease-out both",
       },
       keyframes: {
         slideInLeft: {
@@ -97,6 +98,10 @@ const config: Config = {
           "0%":   { opacity: "0", transform: "translateY(16px) scale(0.97)" },
           "60%":  { transform: "translateY(-2px) scale(1.01)" },
           "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        drawerSlide: {
+          from: { transform: "translateX(-100%)" },
+          to:   { transform: "translateX(0)" },
         },
       },
     },

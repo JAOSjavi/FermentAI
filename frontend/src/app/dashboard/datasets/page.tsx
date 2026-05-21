@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
 import { DatasetAporte } from "@/types";
-import { formatDate } from "@/lib/utils";
 
 const ESTADOS = ["", "semi_fermentado", "fermentado", "sobre_fermentado"] as const;
 
 export default function DatasetsPage() {
-  const [codigo, setCodigo] = useState("");
-  const [estado, setEstado] = useState<string>("");
+  const [codigo, setCodigo]     = useState("");
+  const [estado, setEstado]     = useState<string>("");
   const [busqueda, setBusqueda] = useState({ codigo: "", estado: "" });
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
 
@@ -40,14 +39,14 @@ export default function DatasetsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-bold">Datasets Aprobados</h1>
-        <p className="text-muted-foreground">Consulta todos los datasets científicos disponibles</p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">Datasets Aprobados</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Consulta todos los datasets científicos disponibles</p>
       </div>
 
       {/* Filtros */}
-      <Card>
+      <Card className="border-slate-100">
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[160px] space-y-1">
@@ -70,10 +69,10 @@ export default function DatasetsPage() {
                   <button
                     key={e}
                     onClick={() => setEstado(e)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
                       estado === e
-                        ? "bg-coffee-600 text-white"
-                        : "bg-muted text-muted-foreground hover:bg-coffee-100"
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-indigo-100 hover:text-indigo-700"
                     }`}
                   >
                     {e ? e.replace(/_/g, " ") : "Todos"}
@@ -92,26 +91,26 @@ export default function DatasetsPage() {
       {/* Resultados */}
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coffee-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600" />
         </div>
       ) : !datasets?.length ? (
-        <Card>
+        <Card className="border-slate-100">
           <CardContent className="flex flex-col items-center py-16 gap-4">
-            <Database className="h-12 w-12 text-muted-foreground" />
+            <Database className="h-12 w-12 text-slate-300" />
             <p className="text-muted-foreground">No se encontraron datasets con esos filtros.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
           {datasets.map((dataset) => {
-            const expanded = expandidos.has(dataset.id);
+            const expanded      = expandidos.has(dataset.id);
             const imagenesMuestra = expanded ? dataset.imagenes : dataset.imagenes.slice(0, 6);
             return (
-              <Card key={dataset.id} className="overflow-hidden">
+              <Card key={dataset.id} className="overflow-hidden border-slate-100">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg text-coffee-700">
+                      <CardTitle className="text-lg font-mono-code text-indigo-700">
                         {dataset.fermentacion.codigo}
                       </CardTitle>
                       {dataset.fermentacion.descripcion && (
@@ -165,7 +164,7 @@ export default function DatasetsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleExpand(dataset.id)}
-                      className="text-coffee-600"
+                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                     >
                       {expanded ? (
                         <><ChevronUp className="h-4 w-4" /> Mostrar menos</>

@@ -47,7 +47,7 @@ export default function NotificacionesPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coffee-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600" />
         </div>
       ) : !notifs?.length ? (
         <Card>

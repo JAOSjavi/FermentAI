@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function SubirZipForm({ onSuccess }: Props) {
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile]     = useState<File | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const { mutate: subir, isPending } = useSubirAporte();
 
@@ -22,9 +22,9 @@ export function SubirZipForm({ onSuccess }: Props) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "application/zip": [".zip"] },
+    accept:   { "application/zip": [".zip"] },
     maxFiles: 1,
-    maxSize: 2 * 1024 * 1024 * 1024,
+    maxSize:  2 * 1024 * 1024 * 1024,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,12 +50,12 @@ export function SubirZipForm({ onSuccess }: Props) {
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors",
+          "border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200",
           isDragActive
-            ? "border-coffee-500 bg-coffee-50"
+            ? "border-indigo-500 bg-indigo-50 scale-[1.01]"
             : file
               ? "border-emerald-400 bg-emerald-50"
-              : "border-muted-foreground/30 hover:border-coffee-400 hover:bg-coffee-50/50"
+              : "border-muted-foreground/30 hover:border-indigo-400 hover:bg-indigo-50/50"
         )}
       >
         <input {...getInputProps()} />
@@ -77,12 +77,12 @@ export function SubirZipForm({ onSuccess }: Props) {
         ) : (
           <div className="flex flex-col items-center gap-3">
             {isDragActive ? (
-              <FileArchive className="h-12 w-12 text-coffee-500 animate-bounce" />
+              <FileArchive className="h-12 w-12 text-indigo-500 animate-bounce" />
             ) : (
-              <Upload className="h-12 w-12 text-muted-foreground" />
+              <Upload className="h-12 w-12 text-slate-400" />
             )}
             <div>
-              <p className="font-medium">
+              <p className="font-medium text-slate-700">
                 {isDragActive ? "Suelta el archivo aquí" : "Arrastra tu ZIP o haz clic para seleccionar"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -94,7 +94,7 @@ export function SubirZipForm({ onSuccess }: Props) {
       </div>
 
       {errors.length > 0 && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 space-y-1">
+        <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-4 space-y-1">
           <div className="flex items-center gap-2 text-destructive font-medium text-sm">
             <AlertCircle className="h-4 w-4" />
             {errors.length} error{errors.length > 1 ? "es" : ""} de validación
@@ -114,7 +114,7 @@ export function SubirZipForm({ onSuccess }: Props) {
         {isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Procesando y validando...
+            Procesando y validando…
           </>
         ) : (
           <>

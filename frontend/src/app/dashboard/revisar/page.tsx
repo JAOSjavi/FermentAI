@@ -11,8 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatDate } from "@/lib/utils";
 
 export default function RevisarPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const { user }  = useAuth();
+  const router    = useRouter();
   const { data: pendientes, isLoading } = usePendientes();
 
   useEffect(() => {
@@ -22,31 +22,34 @@ export default function RevisarPage() {
   }, [user, router]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold">Revisar Aportes</h1>
-        <p className="text-muted-foreground">Aportes pendientes de revisión científica</p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">Revisar Aportes</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Aportes pendientes de revisión científica</p>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coffee-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-violet-200 border-t-violet-600" />
         </div>
       ) : !pendientes?.length ? (
-        <Card>
+        <Card className="border-slate-100">
           <CardContent className="flex flex-col items-center py-16 gap-4">
-            <ClipboardList className="h-12 w-12 text-muted-foreground" />
-            <p className="text-muted-foreground">No hay aportes pendientes de revisión.</p>
+            <ClipboardList className="h-12 w-12 text-slate-300" />
+            <p className="text-muted-foreground font-medium">No hay aportes pendientes de revisión.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {pendientes.map((aporte) => (
-            <Card key={aporte.id} className="hover:shadow-md transition-shadow border-l-4 border-l-coffee-400">
+            <Card
+              key={aporte.id}
+              className="hover:shadow-md transition-shadow duration-200 border-slate-100 border-l-4 border-l-violet-400"
+            >
               <CardContent className="p-5 flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-coffee-700">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold font-mono-code text-sm text-violet-700">
                       {aporte.fermentacion?.codigo ?? `Aporte #${aporte.id}`}
                     </span>
                     <EstadoBadge estado={aporte.estado} />
@@ -55,7 +58,11 @@ export default function RevisarPage() {
                     Colaborador: {aporte.usuario?.nombre ?? "—"} · Subido: {formatDate(aporte.fecha_subida)}
                   </p>
                 </div>
-                <Button variant="coffee" size="sm" asChild>
+                <Button
+                  size="sm"
+                  className="flex-shrink-0 bg-violet-700 hover:bg-violet-800 text-white shadow-sm shadow-violet-500/20"
+                  asChild
+                >
                   <Link href={`/dashboard/revisar/${aporte.id}`}>
                     <Eye className="h-4 w-4" />
                     Revisar

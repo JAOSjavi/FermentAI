@@ -10,16 +10,17 @@ import {
   BarChart3,
   Microscope,
   Users,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
 const colabLinks = [
-  { href: "/dashboard",                    label: "Inicio",          icon: LayoutDashboard },
-  { href: "/dashboard/mis-aportes/subir",  label: "Subir Dataset",   icon: Upload          },
-  { href: "/dashboard/mis-aportes",        label: "Mis Aportes",     icon: FolderOpen      },
-  { href: "/dashboard/datasets",           label: "Datasets",        icon: Database        },
-  { href: "/dashboard/visualizacion",      label: "Visualización",   icon: BarChart3       },
+  { href: "/dashboard",                   label: "Inicio",        icon: LayoutDashboard },
+  { href: "/dashboard/mis-aportes/subir", label: "Subir Dataset", icon: Upload          },
+  { href: "/dashboard/mis-aportes",       label: "Mis Aportes",   icon: FolderOpen      },
+  { href: "/dashboard/datasets",          label: "Datasets",      icon: Database        },
+  { href: "/dashboard/visualizacion",     label: "Visualización", icon: BarChart3       },
 ];
 
 const investigadorLinks = [
@@ -28,11 +29,11 @@ const investigadorLinks = [
 
 const roleConfig = {
   colaborador: {
-    label:      "Colaborador",
-    RoleIcon:   Users,
-    topBar:     "from-indigo-700 via-indigo-500 to-indigo-400",
-    badge:      "bg-indigo-50 text-indigo-700 border border-indigo-200/80",
-    sectionTxt: "text-indigo-300",
+    label:        "Colaborador",
+    RoleIcon:     Users,
+    topBar:       "from-indigo-700 via-indigo-500 to-indigo-400",
+    badge:        "bg-indigo-50 text-indigo-700 border border-indigo-200/80",
+    sectionTxt:   "text-indigo-300",
     active: {
       bg:     "bg-indigo-50",
       text:   "text-indigo-700",
@@ -41,15 +42,15 @@ const roleConfig = {
       icon:   "text-indigo-600",
       dot:    "bg-indigo-500",
     },
-    hoverItem:   "hover:bg-indigo-50/70 hover:text-indigo-700",
+    hoverItem:    "hover:bg-indigo-50/70 hover:text-indigo-700",
     extraSection: null as string | null,
   },
   investigador: {
-    label:      "Investigador",
-    RoleIcon:   Microscope,
-    topBar:     "from-violet-800 via-violet-600 to-violet-400",
-    badge:      "bg-violet-50 text-violet-700 border border-violet-200/80",
-    sectionTxt: "text-violet-300",
+    label:        "Investigador",
+    RoleIcon:     Microscope,
+    topBar:       "from-violet-800 via-violet-600 to-violet-400",
+    badge:        "bg-violet-50 text-violet-700 border border-violet-200/80",
+    sectionTxt:   "text-violet-300",
     active: {
       bg:     "bg-violet-50",
       text:   "text-violet-700",
@@ -58,32 +59,31 @@ const roleConfig = {
       icon:   "text-violet-600",
       dot:    "bg-violet-500",
     },
-    hoverItem:   "hover:bg-violet-50/70 hover:text-violet-700",
+    hoverItem:    "hover:bg-violet-50/70 hover:text-violet-700",
     extraSection: "Herramientas" as string | null,
   },
 };
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const { user } = useAuth();
+/* ─── Shared nav content ──────────────────────────────────── */
 
-  const role  = user?.rol === "investigador" ? "investigador" : "colaborador";
-  const cfg   = roleConfig[role];
+function SidebarContent({
+  cfg,
+  mainLinks,
+  extraLinks,
+  activeHref,
+  onClose,
+}: {
+  cfg:         typeof roleConfig[keyof typeof roleConfig];
+  mainLinks:   typeof colabLinks;
+  extraLinks:  typeof investigadorLinks;
+  activeHref:  string | undefined;
+  onClose?:    () => void;
+}) {
   const { RoleIcon } = cfg;
 
-  const mainLinks  = colabLinks;
-  const extraLinks = role === "investigador" ? investigadorLinks : [];
-
-  const allLinks = [...mainLinks, ...extraLinks];
-  const activeHref = allLinks
-    .filter(({ href }) =>
-      pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"))
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
-
   return (
-    <aside className="hidden md:flex w-60 flex-col border-r border-slate-100 bg-white min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      {/* Colored top stripe — role identity */}
+    <>
+      {/* Colored top stripe */}
       <div
         className={cn(
           "absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r origin-left animate-role-stripe",
@@ -91,8 +91,8 @@ export function Sidebar() {
         )}
       />
 
-      {/* Role badge header */}
-      <div className="px-4 pt-6 pb-2 animate-fade-in">
+      {/* Role badge row */}
+      <div className="px-4 pt-6 pb-2 flex items-center justify-between animate-fade-in">
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide",
@@ -102,6 +102,15 @@ export function Sidebar() {
           <RoleIcon className="h-3 w-3" />
           {cfg.label}
         </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -119,6 +128,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={onClose}
               style={{ animationDelay: `${i * 40}ms` }}
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
@@ -136,9 +146,7 @@ export function Sidebar() {
               />
               <span className="flex-1 truncate">{label}</span>
               {active && (
-                <span
-                  className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", cfg.active.dot)}
-                />
+                <span className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", cfg.active.dot)} />
               )}
             </Link>
           );
@@ -159,6 +167,7 @@ export function Sidebar() {
                 <Link
                   key={href}
                   href={href}
+                  onClick={onClose}
                   style={{ animationDelay: `${(mainLinks.length + i) * 40}ms` }}
                   className={cn(
                     "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
@@ -176,9 +185,7 @@ export function Sidebar() {
                   />
                   <span className="flex-1 truncate">{label}</span>
                   {active && (
-                    <span
-                      className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", cfg.active.dot)}
-                    />
+                    <span className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", cfg.active.dot)} />
                   )}
                 </Link>
               );
@@ -193,6 +200,67 @@ export function Sidebar() {
           FermentAI · UCC
         </p>
       </div>
-    </aside>
+    </>
+  );
+}
+
+/* ─── Exported Sidebar ────────────────────────────────────── */
+
+export function Sidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}) {
+  const pathname  = usePathname();
+  const { user }  = useAuth();
+
+  const role      = user?.rol === "investigador" ? "investigador" : "colaborador";
+  const cfg       = roleConfig[role];
+  const mainLinks = colabLinks;
+  const extraLinks = role === "investigador" ? investigadorLinks : [];
+
+  const allLinks  = [...mainLinks, ...extraLinks];
+  const activeHref = allLinks
+    .filter(({ href }) =>
+      pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"))
+    )
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-60 flex-col border-r border-slate-100 bg-white min-h-[calc(100vh-4rem)] relative overflow-hidden">
+        <SidebarContent
+          cfg={cfg}
+          mainLinks={mainLinks}
+          extraLinks={extraLinks}
+          activeHref={activeHref}
+        />
+      </aside>
+
+      {/* Mobile overlay drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          {/* Drawer panel */}
+          <aside className="absolute left-0 top-0 bottom-0 w-72 flex flex-col bg-white shadow-2xl overflow-hidden animate-drawer-slide">
+            <SidebarContent
+              cfg={cfg}
+              mainLinks={mainLinks}
+              extraLinks={extraLinks}
+              activeHref={activeHref}
+              onClose={onClose}
+            />
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

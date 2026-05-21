@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, FlaskConical } from "lucide-react";
+import { Bell, LogOut, FlaskConical, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificaciones } from "@/hooks/useNotificaciones";
@@ -14,6 +14,7 @@ const roleStyles = {
     badge:        "bg-indigo-50 text-indigo-700 border-indigo-200",
     notifBg:      "bg-indigo-600",
     notifGlow:    "shadow-indigo-500/50",
+    menuHover:    "hover:bg-indigo-50 hover:text-indigo-700",
   },
   investigador: {
     logoGradient: "from-violet-500 to-violet-800",
@@ -21,13 +22,18 @@ const roleStyles = {
     badge:        "bg-violet-50 text-violet-700 border-violet-200",
     notifBg:      "bg-violet-600",
     notifGlow:    "shadow-violet-500/50",
+    menuHover:    "hover:bg-violet-50 hover:text-violet-700",
   },
 };
 
-export function Navbar() {
-  const { user, logout } = useAuth();
-  const { data: notifs } = useNotificaciones();
-  const router = useRouter();
+interface NavbarProps {
+  onOpenMobileNav: () => void;
+}
+
+export function Navbar({ onOpenMobileNav }: NavbarProps) {
+  const { user, logout }    = useAuth();
+  const { data: notifs }    = useNotificaciones();
+  const router              = useRouter();
 
   const unread = notifs?.filter((n) => !n.leida).length ?? 0;
   const role   = (user?.rol ?? "colaborador") as keyof typeof roleStyles;
@@ -40,26 +46,41 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
-      <div className="flex h-16 items-center justify-between px-6">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6">
 
-        {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div
+        {/* Left: hamburger (mobile) + logo */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenMobileNav}
             className={cn(
-              "h-8 w-8 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-md",
-              "transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg",
-              rs.logoGradient,
-              rs.logoGlow
+              "md:hidden h-9 w-9 text-slate-500 transition-colors",
+              rs.menuHover
             )}
+            aria-label="Abrir menú"
           >
-            <FlaskConical className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-display text-xl font-bold tracking-tight text-slate-800">
-            FermentAI
-          </span>
-        </Link>
+            <Menu className="h-5 w-5" />
+          </Button>
 
-        {/* Right side */}
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <div
+              className={cn(
+                "h-8 w-8 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-md",
+                "transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg",
+                rs.logoGradient,
+                rs.logoGlow
+              )}
+            >
+              <FlaskConical className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-display text-xl font-bold tracking-tight text-slate-800">
+              FermentAI
+            </span>
+          </Link>
+        </div>
+
+        {/* Right: notifications + user */}
         <div className="flex items-center gap-1.5">
 
           {/* Notifications bell */}

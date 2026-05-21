@@ -19,19 +19,19 @@ import { formatDate } from "@/lib/utils";
 import { MetadatoImagen } from "@/types";
 
 export default function RevisarDetallePage({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const router = useRouter();
+  const { id }    = params;
+  const router    = useRouter();
   const { data: aporte, isLoading, refetch } = useAporteDetalle(Number(id), true);
 
   const [observaciones, setObservaciones] = useState("");
   const [imagenSeleccionada, setImagenSeleccionada] = useState<MetadatoImagen | null>(null);
   const [mostrarTodasImagenes, setMostrarTodasImagenes] = useState(false);
 
-  const { mutate: aprobar, isPending: aprobando } = useAprobar();
-  const { mutate: rechazar, isPending: rechazando } = useRechazar();
+  const { mutate: aprobar,   isPending: aprobando  } = useAprobar();
+  const { mutate: rechazar,  isPending: rechazando } = useRechazar();
   const { mutate: solicitar, isPending: solicitando } = useSolicitarCorrecciones();
 
-  const isPending = aprobando || rechazando || solicitando;
+  const isPending  = aprobando || rechazando || solicitando;
 
   const handleAprobar = () => {
     aprobar(Number(id), {
@@ -55,14 +55,14 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
 
   if (isLoading) return (
     <div className="flex justify-center py-24">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-coffee-600 border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-violet-200 border-t-violet-600" />
     </div>
   );
 
   if (!aporte) return <p className="text-muted-foreground">Aporte no encontrado.</p>;
 
-  const revisable = aporte.estado === "pendiente_revision" || aporte.estado === "correcciones_solicitadas";
-  const imagenes = aporte.metadatos ?? [];
+  const revisable         = aporte.estado === "pendiente_revision" || aporte.estado === "correcciones_solicitadas";
+  const imagenes          = aporte.metadatos ?? [];
   const imagenesMostradas = mostrarTodasImagenes ? imagenes : imagenes.slice(0, 9);
 
   return (
@@ -75,7 +75,9 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
         </Button>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold">{aporte.fermentacion?.codigo ?? `Aporte #${aporte.id}`}</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">
+              {aporte.fermentacion?.codigo ?? `Aporte #${aporte.id}`}
+            </h1>
             <EstadoBadge estado={aporte.estado} />
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">Revisión de aporte científico</p>
@@ -83,47 +85,34 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
       </div>
 
       {/* Info del colaborador */}
-      <Card className="border-coffee-200 bg-coffee-50/40">
+      <Card className="border-violet-200 bg-violet-50/40">
         <CardContent className="p-5 grid sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-coffee-200 flex items-center justify-center">
-              <User className="h-5 w-5 text-coffee-700" />
+          {[
+            { icon: User,        label: "Colaborador",    val: aporte.usuario?.nombre ?? "—",           sub: aporte.usuario?.email },
+            { icon: Calendar,    label: "Fecha de subida", val: formatDate(aporte.fecha_subida)         },
+            { icon: FlaskConical,label: "Fermentación",   val: aporte.fermentacion?.codigo ?? "—",      sub: `${imagenes.length} imágenes` },
+          ].map(({ icon: Icon, label, val, sub }) => (
+            <div key={label} className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                <Icon className="h-5 w-5 text-violet-700" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="font-semibold text-sm">{val}</p>
+                {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Colaborador</p>
-              <p className="font-semibold text-sm">{aporte.usuario?.nombre ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">{aporte.usuario?.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-coffee-100 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-coffee-700" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Fecha de subida</p>
-              <p className="font-semibold text-sm">{formatDate(aporte.fecha_subida)}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-coffee-100 flex items-center justify-center">
-              <FlaskConical className="h-5 w-5 text-coffee-700" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Fermentación</p>
-              <p className="font-semibold text-sm">{aporte.fermentacion?.codigo ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">{imagenes.length} imágenes</p>
-            </div>
-          </div>
+          ))}
         </CardContent>
       </Card>
 
       {/* Galería de imágenes */}
-      <Card>
+      <Card className="border-slate-100">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-coffee-600" />
+              <CardTitle className="font-display text-base flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-violet-600" />
                 Galería de Imágenes
               </CardTitle>
               <CardDescription>{imagenes.length} imágenes · haz clic para ver detalles</CardDescription>
@@ -142,8 +131,8 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
                     onClick={() => setImagenSeleccionada(imagenSeleccionada?.id === meta.id ? null : meta)}
                     className={`group relative rounded-lg overflow-hidden border aspect-square transition-all ${
                       imagenSeleccionada?.id === meta.id
-                        ? "ring-2 ring-coffee-500 border-coffee-400"
-                        : "hover:border-coffee-300"
+                        ? "ring-2 ring-violet-500 border-violet-400"
+                        : "hover:border-violet-300"
                     }`}
                   >
                     {meta.url_imagen ? (
@@ -164,14 +153,18 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
               </div>
 
               {imagenes.length > 9 && (
-                <Button variant="ghost" size="sm" onClick={() => setMostrarTodasImagenes(!mostrarTodasImagenes)} className="text-coffee-600">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setMostrarTodasImagenes(!mostrarTodasImagenes)}
+                  className="text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                >
                   {mostrarTodasImagenes
                     ? <><ChevronUp className="h-4 w-4" /> Mostrar menos</>
                     : <><ChevronDown className="h-4 w-4" /> Ver {imagenes.length - 9} imágenes más</>}
                 </Button>
               )}
 
-              {/* Panel de detalle de imagen seleccionada */}
               {imagenSeleccionada && (
                 <div className="mt-4 rounded-xl border bg-muted/30 p-4 grid sm:grid-cols-2 gap-4">
                   <div className="relative rounded-lg overflow-hidden aspect-video bg-muted">
@@ -188,7 +181,9 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
                     )}
                   </div>
                   <div className="space-y-2 text-sm">
-                    <p className="font-semibold text-coffee-700 truncate">{imagenSeleccionada.imagen}</p>
+                    <p className="font-semibold font-mono-code text-violet-700 truncate text-xs">
+                      {imagenSeleccionada.imagen}
+                    </p>
                     {imagenSeleccionada.timestamp && (
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-3 w-3" />
@@ -200,16 +195,16 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
                         {imagenSeleccionada.estado_fermentacion.replace(/_/g, " ")}
                       </Badge>
                     )}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-1">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-1 border-t">
                       {[
-                        ["Tiempo", imagenSeleccionada.tiempo_horas != null ? `${imagenSeleccionada.tiempo_horas} h` : null],
-                        ["Glucosa", imagenSeleccionada.glucosa_g_l != null ? `${imagenSeleccionada.glucosa_g_l} g/L` : null],
-                        ["Fructosa", imagenSeleccionada.fructosa_g_l != null ? `${imagenSeleccionada.fructosa_g_l} g/L` : null],
-                        ["Etanol", imagenSeleccionada.etanol_g_l != null ? `${imagenSeleccionada.etanol_g_l} g/L` : null],
-                        ["Ác. Láctico", imagenSeleccionada.acido_lactico_g_l != null ? `${imagenSeleccionada.acido_lactico_g_l} g/L` : null],
-                        ["Ác. Acético", imagenSeleccionada.acido_acetico_g_l != null ? `${imagenSeleccionada.acido_acetico_g_l} g/L` : null],
-                        ["Ác. Cítrico", imagenSeleccionada.acido_citrico_g_l != null ? `${imagenSeleccionada.acido_citrico_g_l} g/L` : null],
-                        ["Ác. Succínico", imagenSeleccionada.acido_succinico_g_l != null ? `${imagenSeleccionada.acido_succinico_g_l} g/L` : null],
+                        ["Tiempo",       imagenSeleccionada.tiempo_horas != null       ? `${imagenSeleccionada.tiempo_horas} h`        : null],
+                        ["Glucosa",      imagenSeleccionada.glucosa_g_l != null        ? `${imagenSeleccionada.glucosa_g_l} g/L`       : null],
+                        ["Fructosa",     imagenSeleccionada.fructosa_g_l != null       ? `${imagenSeleccionada.fructosa_g_l} g/L`      : null],
+                        ["Etanol",       imagenSeleccionada.etanol_g_l != null         ? `${imagenSeleccionada.etanol_g_l} g/L`        : null],
+                        ["Ác. Láctico",  imagenSeleccionada.acido_lactico_g_l != null  ? `${imagenSeleccionada.acido_lactico_g_l} g/L` : null],
+                        ["Ác. Acético",  imagenSeleccionada.acido_acetico_g_l != null  ? `${imagenSeleccionada.acido_acetico_g_l} g/L` : null],
+                        ["Ác. Cítrico",  imagenSeleccionada.acido_citrico_g_l != null  ? `${imagenSeleccionada.acido_citrico_g_l} g/L` : null],
+                        ["Ác. Succínico",imagenSeleccionada.acido_succinico_g_l != null? `${imagenSeleccionada.acido_succinico_g_l} g/L`: null],
                       ].filter(([, v]) => v !== null).map(([label, value]) => (
                         <div key={label as string}>
                           <span className="text-muted-foreground">{label}: </span>
@@ -218,7 +213,7 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
                       ))}
                     </div>
                     {imagenSeleccionada.observaciones && (
-                      <p className="text-xs text-coffee-700 bg-coffee-50 rounded px-2 py-1 mt-1">
+                      <p className="text-xs text-violet-700 bg-violet-50 rounded px-2 py-1 mt-1">
                         {imagenSeleccionada.observaciones}
                       </p>
                     )}
@@ -232,9 +227,9 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
 
       {/* Panel de decisión */}
       {revisable ? (
-        <Card className="border-2 border-coffee-200">
+        <Card className="border-2 border-violet-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Decisión de Revisión</CardTitle>
+            <CardTitle className="font-display text-base">Decisión de Revisión</CardTitle>
             <CardDescription>
               Revisa el dataset completo antes de tomar una decisión. Los comentarios son obligatorios para rechazar o solicitar correcciones.
             </CardDescription>
@@ -289,11 +284,10 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
           </CardContent>
         </Card>
       ) : (
-        /* Historial de revisión si ya fue procesado */
         aporte.observaciones && (
-          <Card className="border-l-4 border-l-coffee-400">
+          <Card className="border-l-4 border-l-violet-400">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Comentarios del Investigador</CardTitle>
+              <CardTitle className="font-display text-base">Comentarios del Investigador</CardTitle>
               {aporte.fecha_revision && (
                 <CardDescription>{formatDate(aporte.fecha_revision)}</CardDescription>
               )}

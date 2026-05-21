@@ -11,7 +11,7 @@ import api from "@/lib/api";
 
 export default function RegistroPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ nombre: "", email: "", password: "" });
+  const [form, setForm]   = useState({ nombre: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,17 +34,19 @@ export default function RegistroPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-coffee-50 via-white to-amber-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <FlaskConical className="h-12 w-12 text-coffee-600 mb-3" />
-          <h1 className="text-3xl font-bold text-coffee-800">FermentAI</h1>
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3">
+            <FlaskConical className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-tight">FermentAI</h1>
           <p className="text-muted-foreground text-sm mt-1">Registro de Colaborador</p>
         </div>
 
-        <Card>
+        <Card className="border-slate-100 shadow-sm">
           <CardHeader>
-            <CardTitle>Crear Cuenta</CardTitle>
+            <CardTitle className="font-display">Crear Cuenta</CardTitle>
             <CardDescription>Regístrate para subir datasets de fermentación</CardDescription>
           </CardHeader>
           <CardContent>
@@ -87,7 +89,7 @@ export default function RegistroPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
                   {error}
                 </p>
               )}
@@ -100,7 +102,7 @@ export default function RegistroPage() {
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
               ¿Ya tienes cuenta?{" "}
-              <Link href="/login" className="font-medium text-coffee-600 hover:underline">
+              <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline underline-offset-2">
                 Iniciar Sesión
               </Link>
             </p>
