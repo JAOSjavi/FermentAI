@@ -54,18 +54,3 @@ jobs:
           NEXT_PUBLIC_API_URL: http://placeholder
           NEXT_TELEMETRY_DISABLED: "1"
 
-  # ──────────────────────────────────────────────────
-  # Deploy: trigger Railway webhooks (main only)
-  # ──────────────────────────────────────────────────
-  deploy:
-    name: Deploy to Railway
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Deploy backend
-        run: curl -sf -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_BACKEND }}"
-
-      - name: Deploy frontend
-        run: curl -sf -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_FRONTEND }}"
