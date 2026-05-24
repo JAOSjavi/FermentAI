@@ -23,7 +23,6 @@ def parse_metadata_csv(csv_bytes: bytes) -> List[Dict[str, Any]]:
             "acido_malico_g_l": _float(row.get("acido_malico_g_l")),
             "acido_oxalico_g_l": _float(row.get("acido_oxalico_g_l")),
             "acido_formico_g_l": _float(row.get("acido_formico_g_l")),
-            "estado_fermentacion": row.get("estado_fermentacion", "").strip().lower() or None,
             "intervalo_incertidumbre_min": _int(row.get("intervalo_incertidumbre_min")),
             "validado_asesor": _bool(row.get("validado_asesor")),
             "observaciones": row.get("observaciones", "").strip() or None,

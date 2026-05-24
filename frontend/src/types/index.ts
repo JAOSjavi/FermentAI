@@ -6,11 +6,6 @@ export type EstadoAporte =
   | "rechazado"
   | "correcciones_solicitadas";
 
-export type EstadoFermentacion =
-  | "semi_fermentado"
-  | "fermentado"
-  | "sobre_fermentado";
-
 export type TipoNotificacion =
   | "aporte_aprobado"
   | "aporte_rechazado"
@@ -52,7 +47,6 @@ export interface MetadatoImagen {
   acido_malico_g_l?: number;
   acido_oxalico_g_l?: number;
   acido_formico_g_l?: number;
-  estado_fermentacion?: EstadoFermentacion;
   intervalo_incertidumbre_min?: number;
   validado_asesor: boolean;
   observaciones?: string;

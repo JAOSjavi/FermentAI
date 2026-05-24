@@ -332,11 +332,6 @@ export default function AportePage({ params }: { params: { id: string } }) {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                    {meta.estado_fermentacion && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5 text-[9px] text-white truncate text-center">
-                        {meta.estado_fermentacion.replace(/_/g, " ")}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
@@ -378,11 +373,6 @@ export default function AportePage({ params }: { params: { id: string } }) {
                         <Clock className="h-3 w-3" />
                         {formatDate(imagenSeleccionada.timestamp)}
                       </div>
-                    )}
-                    {imagenSeleccionada.estado_fermentacion && (
-                      <Badge variant="secondary" className="capitalize text-xs">
-                        {imagenSeleccionada.estado_fermentacion.replace(/_/g, " ")}
-                      </Badge>
                     )}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-1 border-t">
                       {[

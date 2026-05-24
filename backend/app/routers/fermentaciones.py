@@ -13,7 +13,6 @@ router = APIRouter(prefix="/api/fermentaciones", tags=["fermentaciones"])
 @router.get("", response_model=list[schemas.DatasetAporteOut])
 def listar_datasets(
     codigo: Optional[str] = Query(None),
-    estado_fermentacion: Optional[str] = Query(None),
     fecha_desde: Optional[datetime] = Query(None),
     fecha_hasta: Optional[datetime] = Query(None),
     db: Session = Depends(get_db),
@@ -26,6 +25,7 @@ def listar_datasets(
             joinedload(models.Aporte.fermentacion),
             joinedload(models.Aporte.metadatos),
         )
+
         .filter(
             models.Aporte.estado == models.EstadoAporteEnum.aprobado,
             models.Aporte.eliminado == False,
@@ -39,14 +39,13 @@ def listar_datasets(
     if fecha_hasta:
         query = query.filter(models.Aporte.fecha_subida <= fecha_hasta)
 
+
     aportes = query.order_by(models.Aporte.fecha_subida.desc()).all()
 
     result = []
     for aporte in aportes:
         imagenes = []
         for meta in aporte.metadatos:
-            if estado_fermentacion and meta.estado_fermentacion != estado_fermentacion:
-                continue
             url = ""
             if aporte.ruta_minio:
                 url = minio_client.presigned_url(f"{aporte.ruta_minio}/{meta.imagen}")

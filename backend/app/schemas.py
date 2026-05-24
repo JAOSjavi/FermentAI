@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr
-from app.models import RolEnum, EstadoAporteEnum, EstadoFermentacionEnum, TipoNotificacionEnum
+from app.models import RolEnum, EstadoAporteEnum, TipoNotificacionEnum
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -64,7 +64,6 @@ class MetadatoImagenOut(BaseModel):
     acido_malico_g_l: Optional[float]
     acido_oxalico_g_l: Optional[float]
     acido_formico_g_l: Optional[float]
-    estado_fermentacion: Optional[EstadoFermentacionEnum]
     intervalo_incertidumbre_min: Optional[int]
     validado_asesor: bool
     observaciones: Optional[str]

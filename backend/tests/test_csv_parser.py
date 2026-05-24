@@ -8,7 +8,7 @@ def make_csv(rows: list[str]) -> bytes:
         "imagen,timestamp,tiempo_horas,glucosa_g_l,fructosa_g_l,sacarosa_g_l,"
         "etanol_g_l,acido_lactico_g_l,acido_acetico_g_l,acido_citrico_g_l,"
         "acido_succinico_g_l,acido_malico_g_l,acido_oxalico_g_l,acido_formico_g_l,"
-        "estado_fermentacion,intervalo_incertidumbre_min,validado_asesor,observaciones\n"
+        "intervalo_incertidumbre_min,validado_asesor,observaciones\n"
     )
     return (header + "\n".join(rows) + "\n").encode("utf-8")
 

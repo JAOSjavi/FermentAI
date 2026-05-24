@@ -18,11 +18,11 @@ VALID_CSV_HEADER = (
     "imagen,timestamp,tiempo_horas,glucosa_g_l,fructosa_g_l,sacarosa_g_l,"
     "etanol_g_l,acido_lactico_g_l,acido_acetico_g_l,acido_citrico_g_l,"
     "acido_succinico_g_l,acido_malico_g_l,acido_oxalico_g_l,acido_formico_g_l,"
-    "estado_fermentacion,intervalo_incertidumbre_min,validado_asesor,observaciones\n"
+    "intervalo_incertidumbre_min,validado_asesor,observaciones\n"
 )
 VALID_CSV_ROW = (
     "FERM99_20240101_120000.jpg,2024-01-01T12:00:00,0.0,45.0,22.0,5.0,"
-    "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,semi_fermentado,5,true,prueba\n"
+    "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5,true,prueba\n"
 )
 
 

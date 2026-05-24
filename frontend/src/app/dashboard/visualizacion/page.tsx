@@ -64,26 +64,6 @@ export default function VisualizacionPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-100">
-        <CardHeader>
-          <CardTitle className="font-display">Estados de Fermentación</CardTitle>
-          <CardDescription>Distribución de imágenes por estado</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {[
-              { estado: "Semi-fermentado",  pct: 35, color: "bg-amber-100 text-amber-800"   },
-              { estado: "Fermentado",       pct: 45, color: "bg-emerald-100 text-emerald-800" },
-              { estado: "Sobre-fermentado", pct: 20, color: "bg-red-100 text-red-800"        },
-            ].map(({ estado, pct, color }) => (
-              <div key={estado} className={`rounded-xl p-4 ${color}`}>
-                <p className="font-display text-3xl font-bold">{pct}%</p>
-                <p className="text-sm font-medium mt-1">{estado}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

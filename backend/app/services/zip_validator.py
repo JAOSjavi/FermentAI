@@ -14,10 +14,9 @@ REQUIRED_CSV_COLUMNS = {
     "glucosa_g_l", "fructosa_g_l", "sacarosa_g_l", "etanol_g_l",
     "acido_lactico_g_l", "acido_acetico_g_l", "acido_citrico_g_l",
     "acido_succinico_g_l", "acido_malico_g_l", "acido_oxalico_g_l",
-    "acido_formico_g_l", "estado_fermentacion",
+    "acido_formico_g_l",
     "intervalo_incertidumbre_min", "validado_asesor", "observaciones",
 }
-VALID_ESTADOS = {"semi_fermentado", "fermentado", "sobre_fermentado"}
 
 
 @dataclass
@@ -146,10 +145,6 @@ def _validate_row(row: dict, row_id: str, errors: List[str]):
                 float(val)
             except ValueError:
                 errors.append(f"[{row_id}] Campo '{field}' no es numérico: '{val}'")
-
-    estado = row.get("estado_fermentacion", "").strip().lower()
-    if estado and estado not in VALID_ESTADOS:
-        errors.append(f"[{row_id}] estado_fermentacion inválido: '{estado}'")
 
     ts = row.get("timestamp", "").strip()
     if ts:

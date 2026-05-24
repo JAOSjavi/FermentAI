@@ -8,6 +8,7 @@ import enum
 from app.database import Base
 
 
+
 class RolEnum(str, enum.Enum):
     colaborador = "colaborador"
     investigador = "investigador"
@@ -18,12 +19,6 @@ class EstadoAporteEnum(str, enum.Enum):
     aprobado = "aprobado"
     rechazado = "rechazado"
     correcciones_solicitadas = "correcciones_solicitadas"
-
-
-class EstadoFermentacionEnum(str, enum.Enum):
-    semi_fermentado = "semi_fermentado"
-    fermentado = "fermentado"
-    sobre_fermentado = "sobre_fermentado"
 
 
 class TipoNotificacionEnum(str, enum.Enum):
@@ -105,7 +100,6 @@ class MetadatoImagen(Base):
     acido_malico_g_l = Column(Float)
     acido_oxalico_g_l = Column(Float)
     acido_formico_g_l = Column(Float)
-    estado_fermentacion = Column(SAEnum(EstadoFermentacionEnum))
     intervalo_incertidumbre_min = Column(Integer)
     validado_asesor = Column(Boolean, default=False)
     observaciones = Column(Text)

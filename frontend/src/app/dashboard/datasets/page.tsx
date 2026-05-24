@@ -10,12 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
 import { DatasetAporte } from "@/types";
 
-const ESTADOS = ["", "semi_fermentado", "fermentado", "sobre_fermentado"] as const;
-
 export default function DatasetsPage() {
   const [codigo, setCodigo]     = useState("");
-  const [estado, setEstado]     = useState<string>("");
-  const [busqueda, setBusqueda] = useState({ codigo: "", estado: "" });
+  const [busqueda, setBusqueda] = useState({ codigo: "" });
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
 
   const { data: datasets, isLoading } = useQuery<DatasetAporte[]>({
@@ -23,12 +20,11 @@ export default function DatasetsPage() {
     queryFn: () => {
       const params = new URLSearchParams();
       if (busqueda.codigo) params.set("codigo", busqueda.codigo);
-      if (busqueda.estado) params.set("estado_fermentacion", busqueda.estado);
       return api.get(`/api/fermentaciones?${params}`).then((r) => r.data);
     },
   });
 
-  const handleBuscar = () => setBusqueda({ codigo, estado });
+  const handleBuscar = () => setBusqueda({ codigo });
 
   const toggleExpand = (id: number) => {
     setExpandidos((prev) => {
@@ -60,24 +56,6 @@ export default function DatasetsPage() {
                   onChange={(e) => setCodigo(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
                 />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Estado de fermentación</label>
-              <div className="flex gap-1 flex-wrap">
-                {ESTADOS.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => setEstado(e)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                      estado === e
-                        ? "bg-indigo-600 text-white shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-indigo-100 hover:text-indigo-700"
-                    }`}
-                  >
-                    {e ? e.replace(/_/g, " ") : "Todos"}
-                  </button>
-                ))}
               </div>
             </div>
             <Button variant="coffee" onClick={handleBuscar}>
@@ -148,11 +126,6 @@ export default function DatasetsPage() {
                         ) : (
                           <div className="flex items-center justify-center h-full text-xs text-muted-foreground p-2 text-center">
                             {img.nombre}
-                          </div>
-                        )}
-                        {img.metadatos?.estado_fermentacion && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-0.5 text-[10px] text-white truncate">
-                            {img.metadatos.estado_fermentacion.replace(/_/g, " ")}
                           </div>
                         )}
                       </div>
