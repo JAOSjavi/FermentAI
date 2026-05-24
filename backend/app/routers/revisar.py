@@ -158,11 +158,7 @@ def aprobar_eliminacion(
         aporte_id=None,
     )
 
-    db.query(models.Notificacion).filter(
-        models.Notificacion.aporte_id == aporte_id
-    ).update({"aporte_id": None})
-    db.flush()
-    db.delete(aporte)
+    notif_svc.hard_delete_aporte(db, aporte)
     db.commit()
 
     return {"ok": True, "id": aporte_id}
