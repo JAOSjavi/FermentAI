@@ -62,8 +62,6 @@ services:
       BACKEND_CORS_ORIGINS: "http://localhost:3000,http://frontend:3000"
       SMTP_HOST: smtp.resend.com
       SMTP_PORT: 587
-      SMTP_USER: resend
-      SMTP_PASSWORD: re_5CEGjc4u_Nkh3EuDRRmXfnmVZsoaF1PXF
       SMTP_FROM: onboarding@resend.dev
       FRONTEND_URL: http://localhost:3000
     ports:
