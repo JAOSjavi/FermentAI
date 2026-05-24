@@ -134,7 +134,7 @@ def solicitar_correcciones(
     return aporte
 
 
-@router.put("/{aporte_id}/aprobar-eliminacion", response_model=schemas.AporteOut)
+@router.put("/{aporte_id}/aprobar-eliminacion", status_code=200)
 def aprobar_eliminacion(
     aporte_id: int,
     db: Session = Depends(get_db),
@@ -143,27 +143,29 @@ def aprobar_eliminacion(
     aporte = _get_or_404(aporte_id, db)
     if not aporte.solicitud_eliminacion:
         raise HTTPException(status_code=400, detail="No hay solicitud de eliminación pendiente")
-    if aporte.eliminado:
-        raise HTTPException(status_code=400, detail="El aporte ya fue eliminado")
+
+    ferm_code = aporte.fermentacion.codigo if aporte.fermentacion else f"#{aporte_id}"
+    colaborador_id = aporte.usuario_id
 
     if aporte.ruta_minio:
         prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
         minio_client.delete_prefix(prefix)
 
-    aporte.eliminado = True
-    aporte.solicitud_eliminacion = False
-    aporte.fecha_revision = datetime.utcnow()
-    aporte.revisado_por = investigador.id
-
     notif_svc.crear_notificacion(
-        db, aporte.usuario_id,
-        models.TipoNotificacionEnum.aporte_aprobado,
-        f"Tu solicitud de eliminación del aporte #{aporte_id} fue aprobada.",
-        aporte_id,
+        db, colaborador_id,
+        models.TipoNotificacionEnum.aporte_eliminado,
+        f"Tu aporte #{aporte_id} (Fermentación: {ferm_code}) fue eliminado del sistema por un investigador.",
+        aporte_id=None,
     )
+
+    db.query(models.Notificacion).filter(
+        models.Notificacion.aporte_id == aporte_id
+    ).update({"aporte_id": None})
+    db.flush()
+    db.delete(aporte)
     db.commit()
-    db.refresh(aporte)
-    return aporte
+
+    return {"ok": True, "id": aporte_id}
 
 
 @router.put("/{aporte_id}/rechazar-eliminacion", response_model=schemas.AporteOut)

@@ -12,14 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EstadoBadge } from "@/components/aportes/EstadoBadge";
-import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion } from "@/hooks/useAportes";
+import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion, useEliminarAporte } from "@/hooks/useAportes";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { MetadatoImagen } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AportePage({ params }: { params: { id: string } }) {
   const { id } = params;
+  const router = useRouter();
   const { user } = useAuth();
   const esInvestigador = user?.rol === "investigador";
   const { data: aporte, isLoading, refetch } = useAporteDetalle(Number(id));
@@ -33,6 +35,9 @@ export default function AportePage({ params }: { params: { id: string } }) {
   const [mostrarFormElim, setMostrarFormElim] = useState(false);
   const [motivoElim, setMotivoElim] = useState("");
   const { mutate: solicitarElim, isPending: solicitandoElim } = useSolicitarEliminacion();
+  const { mutate: eliminarDirecto, isPending: eliminandoDirecto } = useEliminarAporte();
+
+  const eliminandoElim = solicitandoElim || eliminandoDirecto;
 
   function handleEditarDesc() {
     setDescDraft(aporte?.descripcion ?? "");
@@ -47,9 +52,15 @@ export default function AportePage({ params }: { params: { id: string } }) {
 
   function handleSolicitarElim() {
     if (!motivoElim.trim()) return;
-    solicitarElim({ id: Number(id), motivo: motivoElim }, {
-      onSuccess: () => { refetch(); setMostrarFormElim(false); setMotivoElim(""); },
-    });
+    if (esInvestigador) {
+      eliminarDirecto({ id: Number(id), motivo: motivoElim }, {
+        onSuccess: () => router.push("/dashboard/mis-aportes"),
+      });
+    } else {
+      solicitarElim({ id: Number(id), motivo: motivoElim }, {
+        onSuccess: () => { refetch(); setMostrarFormElim(false); setMotivoElim(""); },
+      });
+    }
   }
 
   if (isLoading) return (
@@ -215,12 +226,12 @@ export default function AportePage({ params }: { params: { id: string } }) {
                     size="sm"
                     variant="destructive"
                     onClick={handleSolicitarElim}
-                    disabled={solicitandoElim || !motivoElim.trim()}
+                    disabled={eliminandoElim || !motivoElim.trim()}
                   >
-                    {solicitandoElim ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    {eliminandoElim ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                     {esInvestigador ? "Eliminar" : "Enviar solicitud"}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setMostrarFormElim(false); setMotivoElim(""); }} disabled={solicitandoElim}>
+                  <Button size="sm" variant="ghost" onClick={() => { setMostrarFormElim(false); setMotivoElim(""); }} disabled={eliminandoElim}>
                     Cancelar
                   </Button>
                 </div>

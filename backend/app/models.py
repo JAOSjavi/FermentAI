@@ -31,6 +31,7 @@ class TipoNotificacionEnum(str, enum.Enum):
     aporte_rechazado = "aporte_rechazado"
     correcciones_solicitadas = "correcciones_solicitadas"
     nuevo_aporte_pendiente = "nuevo_aporte_pendiente"
+    aporte_eliminado = "aporte_eliminado"
 
 
 class User(Base):

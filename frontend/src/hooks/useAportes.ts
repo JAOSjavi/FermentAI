@@ -91,7 +91,16 @@ export function useAprobarEliminacion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
-      api.put<Aporte>(`/api/revisar/${id}/aprobar-eliminacion`).then((r) => r.data),
+      api.put(`/api/revisar/${id}/aprobar-eliminacion`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
+  });
+}
+
+export function useEliminarAporte() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      api.post(`/api/aportes/${id}/eliminar`, { motivo }).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
   });
 }

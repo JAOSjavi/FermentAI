@@ -13,6 +13,7 @@ const TIPO_LABELS: Record<TipoNotificacion, string> = {
   aporte_rechazado: "Aporte Rechazado",
   correcciones_solicitadas: "Correcciones Solicitadas",
   nuevo_aporte_pendiente: "Nuevo Aporte Pendiente",
+  aporte_eliminado: "Aporte Eliminado",
 };
 
 const TIPO_COLORS: Record<TipoNotificacion, string> = {
@@ -20,6 +21,7 @@ const TIPO_COLORS: Record<TipoNotificacion, string> = {
   aporte_rechazado: "border-l-red-400",
   correcciones_solicitadas: "border-l-amber-400",
   nuevo_aporte_pendiente: "border-l-blue-400",
+  aporte_eliminado: "border-l-slate-400",
 };
 
 function getDestino(notif: Notificacion): string | null {

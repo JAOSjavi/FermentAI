@@ -15,7 +15,8 @@ export type TipoNotificacion =
   | "aporte_aprobado"
   | "aporte_rechazado"
   | "correcciones_solicitadas"
-  | "nuevo_aporte_pendiente";
+  | "nuevo_aporte_pendiente"
+  | "aporte_eliminado";
 
 export interface User {
   id: number;

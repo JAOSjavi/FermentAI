@@ -203,20 +203,52 @@ def solicitar_eliminacion(
     if aporte.solicitud_eliminacion:
         raise HTTPException(status_code=400, detail="Ya existe una solicitud de eliminación pendiente")
 
-    if current_user.rol == models.RolEnum.investigador:
-        if aporte.ruta_minio:
-            prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
-            minio_client.delete_prefix(prefix)
-        aporte.eliminado = True
-        aporte.motivo_eliminacion = body.motivo
-    else:
-        aporte.solicitud_eliminacion = True
-        aporte.motivo_eliminacion = body.motivo
-        notif_svc.notificar_investigadores(
-            db, aporte.id,
-            f"El colaborador {current_user.nombre} solicita eliminar el aporte #{aporte_id}. Motivo: {body.motivo}",
-        )
+    aporte.solicitud_eliminacion = True
+    aporte.motivo_eliminacion = body.motivo
+    notif_svc.notificar_investigadores(
+        db, aporte.id,
+        f"El colaborador {current_user.nombre} solicita eliminar el aporte #{aporte_id}. Motivo: {body.motivo}",
+    )
 
     db.commit()
     db.refresh(aporte)
     return aporte
+
+
+@router.post("/{aporte_id}/eliminar", status_code=200)
+def eliminar_aporte(
+    aporte_id: int,
+    body: schemas.SolicitarEliminacionRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.rol != models.RolEnum.investigador:
+        raise HTTPException(status_code=403, detail="Solo investigadores pueden eliminar aportes directamente")
+
+    aporte = db.query(models.Aporte).filter(models.Aporte.id == aporte_id).first()
+    if not aporte:
+        raise HTTPException(status_code=404, detail="Aporte no encontrado")
+    if aporte.usuario_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo puedes eliminar tus propios aportes")
+
+    ferm_code = aporte.fermentacion.codigo if aporte.fermentacion else f"#{aporte_id}"
+
+    if aporte.ruta_minio:
+        prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
+        minio_client.delete_prefix(prefix)
+
+    notif_svc.crear_notificacion(
+        db, current_user.id,
+        models.TipoNotificacionEnum.aporte_eliminado,
+        f"Eliminaste el aporte #{aporte_id} (Fermentación: {ferm_code}). Motivo: {body.motivo}",
+        aporte_id=None,
+    )
+
+    db.query(models.Notificacion).filter(
+        models.Notificacion.aporte_id == aporte_id
+    ).update({"aporte_id": None})
+    db.flush()
+    db.delete(aporte)
+    db.commit()
+
+    return {"ok": True, "id": aporte_id}
