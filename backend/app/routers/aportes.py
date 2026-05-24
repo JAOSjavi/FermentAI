@@ -203,13 +203,19 @@ def solicitar_eliminacion(
     if aporte.solicitud_eliminacion:
         raise HTTPException(status_code=400, detail="Ya existe una solicitud de eliminación pendiente")
 
-    aporte.solicitud_eliminacion = True
-    aporte.motivo_eliminacion = body.motivo
-
-    notif_svc.notificar_investigadores(
-        db, aporte.id,
-        f"El colaborador {current_user.nombre} solicita eliminar el aporte #{aporte_id}. Motivo: {body.motivo}",
-    )
+    if current_user.rol == models.RolEnum.investigador:
+        if aporte.ruta_minio:
+            prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
+            minio_client.delete_prefix(prefix)
+        aporte.eliminado = True
+        aporte.motivo_eliminacion = body.motivo
+    else:
+        aporte.solicitud_eliminacion = True
+        aporte.motivo_eliminacion = body.motivo
+        notif_svc.notificar_investigadores(
+            db, aporte.id,
+            f"El colaborador {current_user.nombre} solicita eliminar el aporte #{aporte_id}. Motivo: {body.motivo}",
+        )
 
     db.commit()
     db.refresh(aporte)

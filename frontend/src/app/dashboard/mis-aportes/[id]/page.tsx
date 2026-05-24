@@ -16,9 +16,12 @@ import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion } from 
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { MetadatoImagen } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AportePage({ params }: { params: { id: string } }) {
   const { id } = params;
+  const { user } = useAuth();
+  const esInvestigador = user?.rol === "investigador";
   const { data: aporte, isLoading, refetch } = useAporteDetalle(Number(id));
   const [imagenSeleccionada, setImagenSeleccionada] = useState<MetadatoImagen | null>(null);
   const [mostrarTodas, setMostrarTodas] = useState(false);
@@ -183,9 +186,15 @@ export default function AportePage({ params }: { params: { id: string } }) {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <Trash2 className="h-4 w-4 text-red-500" />
-              <CardTitle className="text-base font-display text-red-700">Solicitar Eliminación</CardTitle>
+              <CardTitle className="text-base font-display text-red-700">
+                {esInvestigador ? "Eliminar Aporte" : "Solicitar Eliminación"}
+              </CardTitle>
             </div>
-            <CardDescription>Solicita al investigador que elimine este aporte del sistema.</CardDescription>
+            <CardDescription>
+              {esInvestigador
+                ? "Elimina este aporte del sistema de forma permanente."
+                : "Solicita al investigador que elimine este aporte del sistema."}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {mostrarFormElim ? (
@@ -209,7 +218,7 @@ export default function AportePage({ params }: { params: { id: string } }) {
                     disabled={solicitandoElim || !motivoElim.trim()}
                   >
                     {solicitandoElim ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                    Enviar solicitud
+                    {esInvestigador ? "Eliminar" : "Enviar solicitud"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => { setMostrarFormElim(false); setMotivoElim(""); }} disabled={solicitandoElim}>
                     Cancelar
@@ -224,7 +233,7 @@ export default function AportePage({ params }: { params: { id: string } }) {
                 onClick={() => setMostrarFormElim(true)}
               >
                 <Trash2 className="h-3 w-3" />
-                Solicitar eliminación
+                {esInvestigador ? "Eliminar aporte" : "Solicitar eliminación"}
               </Button>
             )}
           </CardContent>
