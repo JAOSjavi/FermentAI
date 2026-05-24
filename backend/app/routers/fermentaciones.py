@@ -26,7 +26,10 @@ def listar_datasets(
             joinedload(models.Aporte.fermentacion),
             joinedload(models.Aporte.metadatos),
         )
-        .filter(models.Aporte.estado == models.EstadoAporteEnum.aprobado)
+        .filter(
+            models.Aporte.estado == models.EstadoAporteEnum.aprobado,
+            models.Aporte.eliminado == False,
+        )
     )
 
     if codigo:
