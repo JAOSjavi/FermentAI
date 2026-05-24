@@ -85,6 +85,10 @@ class AporteOut(BaseModel):
     fecha_revision: Optional[datetime]
     revisado_por: Optional[int]
     ruta_minio: Optional[str]
+    descripcion: Optional[str] = None
+    solicitud_eliminacion: bool = False
+    motivo_eliminacion: Optional[str] = None
+    eliminado: bool = False
     fermentacion: Optional[FermentacionOut] = None
     usuario: Optional[UserOut] = None
 
@@ -97,6 +101,14 @@ class AporteDetalle(AporteOut):
 
 class RevisionRequest(BaseModel):
     observaciones: str
+
+
+class SolicitarEliminacionRequest(BaseModel):
+    motivo: str
+
+
+class EditarDescripcionRequest(BaseModel):
+    descripcion: str
 
 
 # ── Notificaciones ─────────────────────────────────────────────────────────────

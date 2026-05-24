@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   ArrowLeft, User, Calendar, FlaskConical, ImageIcon,
   CheckCircle, XCircle, AlertCircle, Loader2, ExternalLink,
-  ChevronDown, ChevronUp, Clock,
+  ChevronDown, ChevronUp, Clock, Trash2, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EstadoBadge } from "@/components/aportes/EstadoBadge";
-import { useAporteDetalle, useAprobar, useRechazar, useSolicitarCorrecciones } from "@/hooks/useAportes";
+import { useAporteDetalle, useAprobar, useRechazar, useSolicitarCorrecciones, useAprobarEliminacion, useRechazarEliminacion } from "@/hooks/useAportes";
 import { formatDate } from "@/lib/utils";
 import { MetadatoImagen } from "@/types";
 
@@ -30,6 +30,8 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
   const { mutate: aprobar,   isPending: aprobando  } = useAprobar();
   const { mutate: rechazar,  isPending: rechazando } = useRechazar();
   const { mutate: solicitar, isPending: solicitando } = useSolicitarCorrecciones();
+  const { mutate: aprobarElim, isPending: aprobandoElim } = useAprobarEliminacion();
+  const { mutate: rechazarElim, isPending: rechazandoElim } = useRechazarEliminacion();
 
   const isPending  = aprobando || rechazando || solicitando;
 
@@ -105,6 +107,64 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
           ))}
         </CardContent>
       </Card>
+
+      {/* Descripción del colaborador */}
+      {aporte.descripcion && (
+        <Card className="border-slate-100">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-violet-600" />
+              <CardTitle className="text-base font-display">Descripción del Aporte</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">{aporte.descripcion}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Panel de solicitud de eliminación */}
+      {aporte.solicitud_eliminacion && !aporte.eliminado && (
+        <Card className="border-2 border-red-200 bg-red-50/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-red-600" />
+              <CardTitle className="font-display text-base text-red-700">Solicitud de Eliminación</CardTitle>
+            </div>
+            <CardDescription>
+              El colaborador solicita eliminar este aporte.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {aporte.motivo_eliminacion && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Motivo:</p>
+                <p className="text-sm text-red-800">{aporte.motivo_eliminacion}</p>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => aprobarElim(Number(id), { onSuccess: () => { refetch(); router.push("/dashboard/revisar"); } })}
+                disabled={aprobandoElim || rechazandoElim}
+              >
+                {aprobandoElim ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Aprobar eliminación
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => rechazarElim(Number(id), { onSuccess: () => refetch() })}
+                disabled={aprobandoElim || rechazandoElim}
+              >
+                {rechazandoElim ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                Denegar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Galería de imágenes */}
       <Card className="border-slate-100">

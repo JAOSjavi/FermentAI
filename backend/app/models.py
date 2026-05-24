@@ -73,6 +73,10 @@ class Aporte(Base):
     fecha_revision = Column(DateTime)
     revisado_por = Column(Integer, ForeignKey("users.id"))
     ruta_minio = Column(String(500))
+    descripcion = Column(Text)
+    solicitud_eliminacion = Column(Boolean, default=False)
+    motivo_eliminacion = Column(Text)
+    eliminado = Column(Boolean, default=False)
 
     usuario = relationship("User", back_populates="aportes", foreign_keys=[usuario_id])
     revisor = relationship("User", back_populates="revisiones", foreign_keys=[revisado_por])

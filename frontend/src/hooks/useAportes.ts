@@ -31,9 +31,10 @@ export function usePendientes() {
 export function useSubirAporte() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: ({ file, descripcion }: { file: File; descripcion?: string }) => {
       const form = new FormData();
       form.append("file", file);
+      if (descripcion) form.append("descripcion", descripcion);
       return api.post<Aporte>("/api/aportes/subir", form, {
         headers: { "Content-Type": "multipart/form-data" },
       }).then((r) => r.data);
@@ -64,6 +65,42 @@ export function useSolicitarCorrecciones() {
   return useMutation({
     mutationFn: ({ id, observaciones }: { id: number; observaciones: string }) =>
       api.put<Aporte>(`/api/revisar/${id}/solicitar-correcciones`, { observaciones }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
+  });
+}
+
+export function useEditarDescripcion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, descripcion }: { id: number; descripcion: string }) =>
+      api.put<Aporte>(`/api/aportes/${id}/descripcion`, { descripcion }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
+  });
+}
+
+export function useSolicitarEliminacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      api.post<Aporte>(`/api/aportes/${id}/solicitar-eliminacion`, { motivo }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
+  });
+}
+
+export function useAprobarEliminacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      api.put<Aporte>(`/api/revisar/${id}/aprobar-eliminacion`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
+  });
+}
+
+export function useRechazarEliminacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      api.put<Aporte>(`/api/revisar/${id}/rechazar-eliminacion`).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
   });
 }

@@ -4,21 +4,50 @@ import Image from "next/image";
 import {
   ArrowLeft, ExternalLink, Calendar, FlaskConical,
   MessageSquare, ImageIcon, ChevronDown, ChevronUp, Clock,
+  FileText, Trash2, Pencil, Loader2, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { EstadoBadge } from "@/components/aportes/EstadoBadge";
-import { useAporteDetalle } from "@/hooks/useAportes";
+import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion } from "@/hooks/useAportes";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { MetadatoImagen } from "@/types";
 
 export default function AportePage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const { data: aporte, isLoading } = useAporteDetalle(Number(id));
+  const { data: aporte, isLoading, refetch } = useAporteDetalle(Number(id));
   const [imagenSeleccionada, setImagenSeleccionada] = useState<MetadatoImagen | null>(null);
   const [mostrarTodas, setMostrarTodas] = useState(false);
+
+  const [editandoDesc, setEditandoDesc] = useState(false);
+  const [descDraft, setDescDraft] = useState("");
+  const { mutate: editarDesc, isPending: guardandoDesc } = useEditarDescripcion();
+
+  const [mostrarFormElim, setMostrarFormElim] = useState(false);
+  const [motivoElim, setMotivoElim] = useState("");
+  const { mutate: solicitarElim, isPending: solicitandoElim } = useSolicitarEliminacion();
+
+  function handleEditarDesc() {
+    setDescDraft(aporte?.descripcion ?? "");
+    setEditandoDesc(true);
+  }
+
+  function handleGuardarDesc() {
+    editarDesc({ id: Number(id), descripcion: descDraft }, {
+      onSuccess: () => { refetch(); setEditandoDesc(false); },
+    });
+  }
+
+  function handleSolicitarElim() {
+    if (!motivoElim.trim()) return;
+    solicitarElim({ id: Number(id), motivo: motivoElim }, {
+      onSuccess: () => { refetch(); setMostrarFormElim(false); setMotivoElim(""); },
+    });
+  }
 
   if (isLoading) return (
     <div className="flex justify-center py-24">
@@ -74,6 +103,133 @@ export default function AportePage({ params }: { params: { id: string } }) {
           ))}
         </CardContent>
       </Card>
+
+      {/* Descripción del aporte */}
+      {!aporte.eliminado && (
+        <Card className="border-slate-100">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-indigo-600" />
+                <CardTitle className="text-base font-display">Descripción</CardTitle>
+              </div>
+              {!editandoDesc && (
+                <Button variant="ghost" size="sm" onClick={handleEditarDesc} className="h-7 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                  <Pencil className="h-3 w-3" />
+                  Editar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editandoDesc ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={descDraft}
+                  onChange={(e) => setDescDraft(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                  placeholder="Añade una descripción para este dataset..."
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="coffee" onClick={handleGuardarDesc} disabled={guardandoDesc}>
+                    {guardandoDesc ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    Guardar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditandoDesc(false)} disabled={guardandoDesc}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : aporte.descripcion ? (
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">{aporte.descripcion}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Sin descripción. Haz clic en Editar para añadir una.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Solicitud de eliminación */}
+      {aporte.eliminado ? (
+        <Card className="border-l-4 border-l-red-400 bg-red-50/40">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-red-800">Aporte eliminado</p>
+              <p className="text-sm text-red-600">Este aporte ha sido eliminado por un investigador.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : aporte.solicitud_eliminacion ? (
+        <Card className="border-l-4 border-l-amber-400 bg-amber-50/40">
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Solicitud de eliminación pendiente</p>
+              {aporte.motivo_eliminacion && (
+                <p className="text-sm text-amber-700 mt-1">Motivo: {aporte.motivo_eliminacion}</p>
+              )}
+              <p className="text-xs text-amber-600 mt-1">Un investigador revisará esta solicitud.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-slate-100">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-red-500" />
+              <CardTitle className="text-base font-display text-red-700">Solicitar Eliminación</CardTitle>
+            </div>
+            <CardDescription>Solicita al investigador que elimine este aporte del sistema.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {mostrarFormElim ? (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="motivo-elim">Motivo de eliminación</Label>
+                  <Textarea
+                    id="motivo-elim"
+                    placeholder="Explica por qué deseas eliminar este aporte..."
+                    rows={3}
+                    value={motivoElim}
+                    onChange={(e) => setMotivoElim(e.target.value)}
+                    className="resize-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleSolicitarElim}
+                    disabled={solicitandoElim || !motivoElim.trim()}
+                  >
+                    {solicitandoElim ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    Enviar solicitud
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setMostrarFormElim(false); setMotivoElim(""); }} disabled={solicitandoElim}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+                onClick={() => setMostrarFormElim(true)}
+              >
+                <Trash2 className="h-3 w-3" />
+                Solicitar eliminación
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Comentarios del investigador */}
       {aporte.observaciones ? (

@@ -68,6 +68,10 @@ export interface Aporte {
   fecha_revision?: string;
   revisado_por?: number;
   ruta_minio?: string;
+  descripcion?: string;
+  solicitud_eliminacion: boolean;
+  motivo_eliminacion?: string;
+  eliminado: boolean;
   fermentacion?: Fermentacion;
   usuario?: User;
   metadatos?: MetadatoImagen[];

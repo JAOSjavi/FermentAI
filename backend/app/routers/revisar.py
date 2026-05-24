@@ -1,5 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import require_investigador
@@ -17,7 +18,16 @@ def listar_pendientes(
 ):
     return (
         db.query(models.Aporte)
-        .filter(models.Aporte.estado == models.EstadoAporteEnum.pendiente_revision)
+        .filter(
+            models.Aporte.eliminado == False,
+            or_(
+                models.Aporte.estado.in_([
+                    models.EstadoAporteEnum.pendiente_revision,
+                    models.EstadoAporteEnum.correcciones_solicitadas,
+                ]),
+                models.Aporte.solicitud_eliminacion == True,
+            ),
+        )
         .order_by(models.Aporte.fecha_subida.asc())
         .all()
     )
@@ -117,6 +127,62 @@ def solicitar_correcciones(
         db, aporte.usuario_id,
         models.TipoNotificacionEnum.correcciones_solicitadas,
         f"Tu aporte #{aporte_id} requiere correcciones: {body.observaciones}",
+        aporte_id,
+    )
+    db.commit()
+    db.refresh(aporte)
+    return aporte
+
+
+@router.put("/{aporte_id}/aprobar-eliminacion", response_model=schemas.AporteOut)
+def aprobar_eliminacion(
+    aporte_id: int,
+    db: Session = Depends(get_db),
+    investigador: models.User = Depends(require_investigador),
+):
+    aporte = _get_or_404(aporte_id, db)
+    if not aporte.solicitud_eliminacion:
+        raise HTTPException(status_code=400, detail="No hay solicitud de eliminación pendiente")
+    if aporte.eliminado:
+        raise HTTPException(status_code=400, detail="El aporte ya fue eliminado")
+
+    if aporte.ruta_minio:
+        prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
+        minio_client.delete_prefix(prefix)
+
+    aporte.eliminado = True
+    aporte.solicitud_eliminacion = False
+    aporte.fecha_revision = datetime.utcnow()
+    aporte.revisado_por = investigador.id
+
+    notif_svc.crear_notificacion(
+        db, aporte.usuario_id,
+        models.TipoNotificacionEnum.aporte_aprobado,
+        f"Tu solicitud de eliminación del aporte #{aporte_id} fue aprobada.",
+        aporte_id,
+    )
+    db.commit()
+    db.refresh(aporte)
+    return aporte
+
+
+@router.put("/{aporte_id}/rechazar-eliminacion", response_model=schemas.AporteOut)
+def rechazar_eliminacion(
+    aporte_id: int,
+    db: Session = Depends(get_db),
+    investigador: models.User = Depends(require_investigador),
+):
+    aporte = _get_or_404(aporte_id, db)
+    if not aporte.solicitud_eliminacion:
+        raise HTTPException(status_code=400, detail="No hay solicitud de eliminación pendiente")
+
+    aporte.solicitud_eliminacion = False
+    aporte.motivo_eliminacion = None
+
+    notif_svc.crear_notificacion(
+        db, aporte.usuario_id,
+        models.TipoNotificacionEnum.aporte_rechazado,
+        f"Tu solicitud de eliminación del aporte #{aporte_id} fue denegada.",
         aporte_id,
     )
     db.commit()

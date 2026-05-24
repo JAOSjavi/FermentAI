@@ -3,6 +3,8 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileArchive, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useSubirAporte } from "@/hooks/useAportes";
 import { cn } from "@/lib/utils";
 
@@ -11,8 +13,9 @@ interface Props {
 }
 
 export function SubirZipForm({ onSuccess }: Props) {
-  const [file, setFile]     = useState<File | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [file, setFile]           = useState<File | null>(null);
+  const [descripcion, setDescripcion] = useState("");
+  const [errors, setErrors]       = useState<string[]>([]);
   const { mutate: subir, isPending } = useSubirAporte();
 
   const onDrop = useCallback((accepted: File[]) => {
@@ -31,7 +34,7 @@ export function SubirZipForm({ onSuccess }: Props) {
     e.preventDefault();
     if (!file) return;
     setErrors([]);
-    subir(file, {
+    subir({ file, descripcion: descripcion.trim() || undefined }, {
       onSuccess: (aporte) => onSuccess(aporte.id),
       onError: (err: unknown) => {
         const detail = (err as { response?: { data?: { detail?: { errores?: string[] } | string } } })
@@ -91,6 +94,20 @@ export function SubirZipForm({ onSuccess }: Props) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="descripcion" className="text-slate-700">
+          Descripción <span className="text-muted-foreground font-normal">(opcional)</span>
+        </Label>
+        <Textarea
+          id="descripcion"
+          placeholder="Describe brevemente este dataset: condiciones de fermentación, variedad de café, notas relevantes..."
+          rows={3}
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          className="resize-none"
+        />
       </div>
 
       {errors.length > 0 && (

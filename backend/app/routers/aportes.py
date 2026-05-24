@@ -3,7 +3,8 @@ import shutil
 import tempfile
 import zipfile
 from datetime import datetime
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from typing import Optional
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -32,6 +33,7 @@ def _check_rate_limit(user_id: int, db: Session):
 @router.post("/subir", response_model=schemas.AporteOut, status_code=status.HTTP_201_CREATED)
 async def subir_aporte(
     file: UploadFile = File(...),
+    descripcion: Optional[str] = Form(None),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -77,6 +79,7 @@ async def subir_aporte(
             usuario_id=current_user.id,
             fermentacion_id=ferm.id,
             estado=estado,
+            descripcion=descripcion,
         )
         db.add(aporte)
         db.flush()
@@ -160,3 +163,54 @@ def detalle_aporte(
                 f"{aporte.ruta_minio}/{meta_out.imagen}"
             )
     return detalle
+
+
+@router.put("/{aporte_id}/descripcion", response_model=schemas.AporteOut)
+def editar_descripcion(
+    aporte_id: int,
+    body: schemas.EditarDescripcionRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    aporte = db.query(models.Aporte).filter(models.Aporte.id == aporte_id).first()
+    if not aporte:
+        raise HTTPException(status_code=404, detail="Aporte no encontrado")
+    if aporte.usuario_id != current_user.id and current_user.rol != models.RolEnum.investigador:
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    if aporte.eliminado:
+        raise HTTPException(status_code=400, detail="No se puede editar un aporte eliminado")
+
+    aporte.descripcion = body.descripcion
+    db.commit()
+    db.refresh(aporte)
+    return aporte
+
+
+@router.post("/{aporte_id}/solicitar-eliminacion", response_model=schemas.AporteOut)
+def solicitar_eliminacion(
+    aporte_id: int,
+    body: schemas.SolicitarEliminacionRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    aporte = db.query(models.Aporte).filter(models.Aporte.id == aporte_id).first()
+    if not aporte:
+        raise HTTPException(status_code=404, detail="Aporte no encontrado")
+    if aporte.usuario_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo puedes solicitar la eliminación de tus propios aportes")
+    if aporte.eliminado:
+        raise HTTPException(status_code=400, detail="El aporte ya fue eliminado")
+    if aporte.solicitud_eliminacion:
+        raise HTTPException(status_code=400, detail="Ya existe una solicitud de eliminación pendiente")
+
+    aporte.solicitud_eliminacion = True
+    aporte.motivo_eliminacion = body.motivo
+
+    notif_svc.notificar_investigadores(
+        db, aporte.id,
+        f"El colaborador {current_user.nombre} solicita eliminar el aporte #{aporte_id}. Motivo: {body.motivo}",
+    )
+
+    db.commit()
+    db.refresh(aporte)
+    return aporte
