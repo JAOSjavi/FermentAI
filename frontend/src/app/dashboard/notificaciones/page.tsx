@@ -1,5 +1,5 @@
 "use client";
-import { Bell, CheckCheck, ChevronRight } from "lucide-react";
+import { Bell, CheckCheck, ChevronRight, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +32,7 @@ function getDestino(notif: Notificacion): string | null {
 
 export default function NotificacionesPage() {
   const router = useRouter();
-  const { data: notifs, isLoading } = useNotificaciones();
+  const { data: notifs, isLoading, isError } = useNotificaciones();
   const { mutate: leerTodas } = useLeerTodas();
   const { mutate: marcarLeida } = useMarcarLeida();
 
@@ -65,6 +65,14 @@ export default function NotificacionesPage() {
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600" />
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center py-16 gap-3">
+            <AlertCircle className="h-10 w-10 text-red-400" />
+            <p className="text-slate-600 font-medium">No se pudieron cargar las notificaciones</p>
+            <p className="text-sm text-muted-foreground">Intenta recargar la página.</p>
+          </CardContent>
+        </Card>
       ) : !notifs?.length ? (
         <Card>
           <CardContent className="flex flex-col items-center py-16 gap-4">

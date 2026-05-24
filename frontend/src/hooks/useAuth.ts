@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types";
 import api from "@/lib/api";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/auth";
 
 export function useAuth() {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,8 @@ export function useAuth() {
   const logout = useCallback(() => {
     removeToken();
     setUser(null);
-  }, []);
+    queryClient.clear();
+  }, [queryClient]);
 
   return { user, loading, login, logout };
 }
