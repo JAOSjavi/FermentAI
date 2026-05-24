@@ -11,6 +11,7 @@ import {
   Microscope,
   Users,
   X,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +22,7 @@ const colabLinks = [
   { href: "/dashboard/mis-aportes",       label: "Mis Aportes",   icon: FolderOpen      },
   { href: "/dashboard/datasets",          label: "Datasets",      icon: Database        },
   { href: "/dashboard/visualizacion",     label: "Visualización", icon: BarChart3       },
+  { href: "/dashboard/ajustes",           label: "Ajustes",       icon: Settings        },
 ];
 
 const investigadorLinks = [

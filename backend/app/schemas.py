@@ -113,6 +113,30 @@ class NotificacionOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Reset de contraseña ────────────────────────────────────────────────────────
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    nueva_password: str
+
+
+# ── Ajustes de cuenta ─────────────────────────────────────────────────────────
+
+class CambiarEmailRequest(BaseModel):
+    nuevo_email: EmailStr
+    password_actual: str
+
+
+class CambiarPasswordRequest(BaseModel):
+    password_actual: str
+    password_nuevo: str
+    password_nuevo_confirm: str
+
+
 # ── Dataset público ────────────────────────────────────────────────────────────
 
 class DatasetImagenOut(BaseModel):

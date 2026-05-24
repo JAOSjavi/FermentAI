@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app import models
 from app.auth import hash_password
-from app.routers import auth, aportes, revisar, fermentaciones, notificaciones
+from app.routers import auth, aportes, revisar, fermentaciones, notificaciones, reset_password, ajustes
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,8 @@ app.include_router(aportes.router)
 app.include_router(revisar.router)
 app.include_router(fermentaciones.router)
 app.include_router(notificaciones.router)
+app.include_router(reset_password.router)
+app.include_router(ajustes.router)
 
 
 @app.on_event("startup")

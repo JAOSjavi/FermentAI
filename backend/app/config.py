@@ -16,6 +16,13 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    FRONTEND_URL: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8-sig"
