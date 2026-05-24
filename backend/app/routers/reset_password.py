@@ -1,8 +1,5 @@
 import uuid
-import smtplib
-import ssl
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+import resend
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,10 +16,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 def _send_reset_email(to_email: str, nombre: str, reset_url: str) -> bool:
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "Recupera tu contraseña — FermentAI"
-        msg["From"] = settings.SMTP_FROM
-        msg["To"] = to_email
+        resend.api_key = settings.RESEND_API_KEY
 
         html = f"""
         <!DOCTYPE html>
@@ -70,14 +64,13 @@ def _send_reset_email(to_email: str, nombre: str, reset_url: str) -> bool:
         </body>
         </html>
         """
-        msg.attach(MIMEText(html, "html"))
 
-        context = ssl.create_default_context()
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_FROM, to_email, msg.as_string())
+        resend.Emails.send({
+            "from": settings.SMTP_FROM,
+            "to": to_email,
+            "subject": "Recupera tu contraseña — FermentAI",
+            "html": html,
+        })
         return True
     except Exception:
         return False

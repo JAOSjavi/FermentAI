@@ -16,11 +16,8 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
-    SMTP_HOST: str = "smtp.gmail.com"
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = ""
+    RESEND_API_KEY: str = ""
+    SMTP_FROM: str = "onboarding@resend.dev"
     FRONTEND_URL: str = "http://localhost:3000"
 
     class Config:
