@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
 import { useCambiarEmail, useCambiarPassword } from "@/hooks/useAjustes";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -84,9 +86,8 @@ function CambiarEmailSection() {
 
         <div className="space-y-2">
           <Label htmlFor="pw-email" className="text-slate-700 font-medium text-sm">Contraseña actual</Label>
-          <Input
+          <PasswordInput
             id="pw-email"
-            type="password"
             placeholder="••••••••"
             value={passwordActual}
             onChange={(e) => setPasswordActual(e.target.value)}
@@ -166,9 +167,8 @@ function CambiarPasswordSection() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="pw-actual" className="text-slate-700 font-medium text-sm">Contraseña actual</Label>
-          <Input
+          <PasswordInput
             id="pw-actual"
-            type="password"
             placeholder="••••••••"
             value={passwordActual}
             onChange={(e) => setPasswordActual(e.target.value)}
@@ -179,22 +179,21 @@ function CambiarPasswordSection() {
 
         <div className="space-y-2">
           <Label htmlFor="pw-nuevo" className="text-slate-700 font-medium text-sm">Nueva contraseña</Label>
-          <Input
+          <PasswordInput
             id="pw-nuevo"
-            type="password"
             placeholder="Mínimo 8 caracteres"
             value={passwordNuevo}
             onChange={(e) => setPasswordNuevo(e.target.value)}
             className="h-10 border-slate-200 focus-visible:ring-violet-500"
             required
           />
+          <PasswordStrength password={passwordNuevo} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="pw-confirm" className="text-slate-700 font-medium text-sm">Confirmar nueva contraseña</Label>
-          <Input
+          <PasswordInput
             id="pw-confirm"
-            type="password"
             placeholder="Repite la contraseña"
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}

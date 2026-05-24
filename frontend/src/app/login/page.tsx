@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FlaskConical, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
@@ -40,12 +40,12 @@ export default function LoginPage() {
           <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
         </div>
 
-        <div className="flex items-center gap-3 relative">
+        <Link href="/" className="flex items-center gap-3 relative">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/40">
             <FlaskConical className="h-5 w-5 text-white" />
           </div>
           <span className="text-2xl font-bold text-white">FermentAI</span>
-        </div>
+        </Link>
 
         <div className="relative">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
@@ -78,12 +78,12 @@ export default function LoginPage() {
       {/* Right Panel — form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
         <div className="w-full max-w-md">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
+          <Link href="/" className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
               <FlaskConical className="h-4 w-4 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-900">FermentAI</span>
-          </div>
+          </Link>
 
           <h1 className="text-3xl font-bold text-slate-900 mb-1">Iniciar Sesión</h1>
           <p className="text-slate-500 mb-8">Ingresa con tus credenciales para acceder</p>
@@ -108,9 +108,8 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-slate-700 font-medium">
                 Contraseña
               </Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

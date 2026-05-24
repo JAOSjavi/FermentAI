@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
 import api from "@/lib/api";
 
 export default function RegistroPage() {
@@ -37,10 +39,12 @@ export default function RegistroPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3">
-            <FlaskConical className="h-7 w-7 text-white" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-tight">FermentAI</h1>
+          <Link href="/" className="flex flex-col items-center">
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3">
+              <FlaskConical className="h-7 w-7 text-white" />
+            </div>
+            <h1 className="font-display text-3xl font-bold text-slate-900 tracking-tight">FermentAI</h1>
+          </Link>
           <p className="text-muted-foreground text-sm mt-1">Registro de Colaborador</p>
         </div>
 
@@ -76,16 +80,16 @@ export default function RegistroPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   placeholder="Mínimo 8 caracteres"
                   value={form.password}
                   onChange={handleChange}
                   required
                   minLength={8}
                 />
+                <PasswordStrength password={form.password} />
               </div>
 
               {error && (

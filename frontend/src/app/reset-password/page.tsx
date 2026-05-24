@@ -4,8 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FlaskConical, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
 import api from "@/lib/api";
 
 function ResetPasswordForm() {
@@ -47,12 +48,12 @@ function ResetPasswordForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="flex items-center gap-2 mb-8 lg:hidden">
+      <Link href="/" className="flex items-center gap-2 mb-8 lg:hidden">
         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
           <FlaskConical className="h-4 w-4 text-white" />
         </div>
         <span className="text-xl font-bold text-slate-900">FermentAI</span>
-      </div>
+      </Link>
 
       {done ? (
         <div className="text-center">
@@ -83,9 +84,8 @@ function ResetPasswordForm() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-slate-700 font-medium">Nueva contraseña</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -93,13 +93,13 @@ function ResetPasswordForm() {
                 required
                 disabled={!token}
               />
+              <PasswordStrength password={password} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirm" className="text-slate-700 font-medium">Confirmar contraseña</Label>
-              <Input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 placeholder="Repite la contraseña"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
@@ -149,12 +149,12 @@ export default function ResetPasswordPage() {
           <div className="absolute top-1/4 -left-10 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
         </div>
-        <div className="flex items-center gap-3 relative">
+        <Link href="/" className="flex items-center gap-3 relative">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/40">
             <FlaskConical className="h-5 w-5 text-white" />
           </div>
           <span className="text-2xl font-bold text-white">FermentAI</span>
-        </div>
+        </Link>
         <div className="relative">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
             Crea una contraseña

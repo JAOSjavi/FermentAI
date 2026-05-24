@@ -42,12 +42,12 @@ export default function ForgotPasswordPage() {
           <div className="absolute top-1/4 -left-10 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
         </div>
-        <div className="flex items-center gap-3 relative">
+        <Link href="/" className="flex items-center gap-3 relative">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/40">
             <FlaskConical className="h-5 w-5 text-white" />
           </div>
           <span className="text-2xl font-bold text-white">FermentAI</span>
-        </div>
+        </Link>
         <div className="relative">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
             Recupera tu acceso
@@ -77,12 +77,12 @@ export default function ForgotPasswordPage() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
         <div className="w-full max-w-md">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
+          <Link href="/" className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
               <FlaskConical className="h-4 w-4 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-900">FermentAI</span>
-          </div>
+          </Link>
 
           {sent ? (
             <div className="text-center">
