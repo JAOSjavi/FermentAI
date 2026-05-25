@@ -4,6 +4,7 @@ from botocore.exceptions import ClientError
 from app.config import settings
 
 _s3 = None
+_s3_presign = None
 
 
 def get_s3():
@@ -18,6 +19,21 @@ def get_s3():
             config=Config(signature_version="s3v4"),
         )
     return _s3
+
+
+def _get_s3_presign():
+    """Cliente con el endpoint público para presigned URLs (solo cómputo local, sin HTTP)."""
+    global _s3_presign
+    if _s3_presign is None:
+        protocol = "https" if settings.MINIO_SECURE else "http"
+        _s3_presign = boto3.client(
+            "s3",
+            endpoint_url=f"{protocol}://{settings.MINIO_PUBLIC_ENDPOINT}",
+            aws_access_key_id=settings.MINIO_ACCESS_KEY,
+            aws_secret_access_key=settings.MINIO_SECRET_KEY,
+            config=Config(signature_version="s3v4"),
+        )
+    return _s3_presign
 
 
 def ensure_bucket():
@@ -58,18 +74,16 @@ def upload_bytes(data: bytes, object_key: str, content_type: str = "image/jpeg")
 
 
 def presigned_url(object_key: str, expires: int = 3600) -> str:
-    s3 = get_s3()
+    # Usar el cliente con el endpoint público para que el HMAC se firme con el host
+    # que el navegador enviará (MINIO_PUBLIC_ENDPOINT), evitando el error 403.
+    # generate_presigned_url es cómputo local, no hace llamadas HTTP.
+    s3 = _get_s3_presign()
     try:
-        url = s3.generate_presigned_url(
+        return s3.generate_presigned_url(
             "get_object",
             Params={"Bucket": settings.MINIO_BUCKET, "Key": object_key},
             ExpiresIn=expires,
         )
-        # Reemplaza el endpoint interno por el público (necesario en Docker)
-        protocol = "https" if settings.MINIO_SECURE else "http"
-        internal = f"{protocol}://{settings.MINIO_ENDPOINT}"
-        public = f"{protocol}://{settings.MINIO_PUBLIC_ENDPOINT}"
-        return url.replace(internal, public, 1)
     except ClientError:
         return ""
 
