@@ -113,3 +113,27 @@ export function useRechazarEliminacion() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
   });
 }
+
+export function useDescargarDataset() {
+  return useMutation({
+    mutationFn: async ({
+      aporteId,
+      fermentacionCodigo,
+    }: {
+      aporteId: number;
+      fermentacionCodigo: string;
+    }) => {
+      const response = await api.get(`/api/aportes/${aporteId}/descargar-dataset`, {
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fermentacionCodigo}_dataset.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+  });
+}

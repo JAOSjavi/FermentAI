@@ -93,3 +93,24 @@ def copy_prefix(src_prefix: str, dst_prefix: str):
                 CopySource={"Bucket": settings.MINIO_BUCKET, "Key": obj["Key"]},
                 Key=new_key,
             )
+
+
+def delete_object(key: str):
+    s3 = get_s3()
+    s3.delete_object(Bucket=settings.MINIO_BUCKET, Key=key)
+
+
+def list_objects(prefix: str) -> list[str]:
+    s3 = get_s3()
+    keys: list[str] = []
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=settings.MINIO_BUCKET, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            keys.append(obj["Key"])
+    return keys
+
+
+def get_bytes(key: str) -> bytes:
+    s3 = get_s3()
+    response = s3.get_object(Bucket=settings.MINIO_BUCKET, Key=key)
+    return response["Body"].read()

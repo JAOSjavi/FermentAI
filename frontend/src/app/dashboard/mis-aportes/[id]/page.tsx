@@ -4,7 +4,7 @@ import Image from "next/image";
 import {
   ArrowLeft, ExternalLink, Calendar, FlaskConical,
   MessageSquare, ImageIcon, ChevronDown, ChevronUp, Clock,
-  FileText, Trash2, Pencil, Loader2, AlertTriangle,
+  FileText, Trash2, Pencil, Loader2, AlertTriangle, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EstadoBadge } from "@/components/aportes/EstadoBadge";
-import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion, useEliminarAporte } from "@/hooks/useAportes";
+import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion, useEliminarAporte, useDescargarDataset } from "@/hooks/useAportes";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,7 @@ export default function AportePage({ params }: { params: { id: string } }) {
   const [motivoElim, setMotivoElim] = useState("");
   const { mutate: solicitarElim, isPending: solicitandoElim } = useSolicitarEliminacion();
   const { mutate: eliminarDirecto, isPending: eliminandoDirecto } = useEliminarAporte();
+  const { mutate: descargar, isPending: descargando } = useDescargarDataset();
 
   const eliminandoElim = solicitandoElim || eliminandoDirecto;
 
@@ -160,6 +161,42 @@ export default function AportePage({ params }: { params: { id: string } }) {
             ) : (
               <p className="text-sm text-muted-foreground italic">Sin descripción. Haz clic en Editar para añadir una.</p>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Descarga del dataset limpio — solo cuando está aprobado */}
+      {aporte.estado === "aprobado" && !aporte.eliminado && (
+        <Card className="border-emerald-100 bg-emerald-50/30">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <Download className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Dataset limpio disponible</p>
+                <p className="text-xs text-muted-foreground">Imágenes procesadas + CSV de mediciones HPLC</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                descargar({
+                  aporteId: Number(id),
+                  fermentacionCodigo: aporte.fermentacion?.codigo ?? "",
+                })
+              }
+              disabled={descargando}
+              className="border-emerald-400 text-emerald-700 hover:bg-emerald-100 flex-shrink-0"
+            >
+              {descargando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Descargar dataset
+            </Button>
           </CardContent>
         </Card>
       )}

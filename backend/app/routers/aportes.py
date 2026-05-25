@@ -1,22 +1,26 @@
-import os
-import shutil
-import tempfile
+import io
+import re
 import zipfile
+from dataclasses import asdict
 from datetime import datetime
 from typing import Optional
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.dependencies import get_current_user
 from app import models, schemas
-from app.services.zip_validator import validate_zip
-from app.services.csv_parser import parse_metadata_csv
-from app.services import notificaciones as notif_svc
 from app import minio_client
+from app.services import notificaciones as notif_svc
+from app.pipeline import ejecutar_pipeline, PipelineError
 
 router = APIRouter(prefix="/api/aportes", tags=["aportes"])
 
 RATE_LIMIT_PER_HOUR = 5
+MAX_ZIP_BYTES = 2 * 1024 * 1024 * 1024
+_FERM_CODE_RE = re.compile(r"^FERM(0[1-9]|1[0-2])$")
 
 
 def _check_rate_limit(user_id: int, db: Session):
@@ -30,7 +34,15 @@ def _check_rate_limit(user_id: int, db: Session):
         raise HTTPException(status_code=429, detail="Límite de 5 subidas por hora alcanzado")
 
 
-@router.post("/subir", response_model=schemas.AporteOut, status_code=status.HTTP_201_CREATED)
+def _extract_ferm_code(names: list[str]) -> str | None:
+    for name in names:
+        parts = name.split("/")
+        if len(parts) >= 2 and _FERM_CODE_RE.match(parts[0]):
+            return parts[0]
+    return None
+
+
+@router.post("/subir", response_model=schemas.AporteSubidaOut, status_code=status.HTTP_201_CREATED)
 async def subir_aporte(
     file: UploadFile = File(...),
     descripcion: Optional[str] = Form(None),
@@ -39,96 +51,86 @@ async def subir_aporte(
 ):
     _check_rate_limit(current_user.id, db)
 
-    if not file.filename.endswith(".zip"):
+    if not file.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos .zip")
 
-    # Guardar temporalmente
-    tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    content = await file.read()
+
+    if len(content) > MAX_ZIP_BYTES:
+        raise HTTPException(status_code=400, detail="El ZIP supera el límite de 2 GB")
+
+    # Extraer ferm_code antes de lanzar el pipeline (necesario para la FK de Fermentacion)
     try:
-        content = await file.read()
-        zip_size = len(content)
-        tmp.write(content)
-        tmp.flush()
-        tmp.close()
+        with zipfile.ZipFile(io.BytesIO(content)) as zf:
+            ferm_code = _extract_ferm_code(zf.namelist())
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="El archivo no es un ZIP válido")
 
-        # Validar
-        result = validate_zip(tmp.name, zip_size)
-        if not result.valid:
-            raise HTTPException(status_code=400, detail={"errores": result.errors})
+    if not ferm_code:
+        raise HTTPException(status_code=422, detail="No se encontró carpeta FERM01–FERM12 en el ZIP")
 
-        ferm_code = result.ferm_code
-
-        # Buscar o crear fermentación
-        ferm = db.query(models.Fermentacion).filter(
-            models.Fermentacion.codigo == ferm_code
-        ).first()
-        if not ferm:
-            ferm = models.Fermentacion(codigo=ferm_code)
-            db.add(ferm)
-            db.flush()
-
-        # Determinar estado según rol
-        estado = (
-            models.EstadoAporteEnum.aprobado
-            if current_user.rol == models.RolEnum.investigador
-            else models.EstadoAporteEnum.pendiente_revision
-        )
-        folder = "approved" if estado == models.EstadoAporteEnum.aprobado else "pending"
-
-        aporte = models.Aporte(
-            usuario_id=current_user.id,
-            fermentacion_id=ferm.id,
-            estado=estado,
-            descripcion=descripcion,
-        )
-        db.add(aporte)
+    # Crear o reutilizar Fermentacion
+    ferm = db.query(models.Fermentacion).filter(
+        models.Fermentacion.codigo == ferm_code
+    ).first()
+    if not ferm:
+        ferm = models.Fermentacion(codigo=ferm_code)
+        db.add(ferm)
         db.flush()
 
-        ruta_base = f"{folder}/{aporte.id}/{ferm_code}/imagenes"
-        aporte.ruta_minio = ruta_base
+    estado = (
+        models.EstadoAporteEnum.aprobado
+        if current_user.rol == models.RolEnum.investigador
+        else models.EstadoAporteEnum.pendiente_revision
+    )
 
-        # Parsear CSV
-        img_prefix = f"{ferm_code}/imagenes/"
-        csv_path_in_zip = f"{ferm_code}/{ferm_code}_metadata.csv"
-        zf = zipfile.ZipFile(tmp.name)
-        csv_bytes = zf.read(csv_path_in_zip)
-        rows = parse_metadata_csv(csv_bytes)
+    aporte = models.Aporte(
+        usuario_id=current_user.id,
+        fermentacion_id=ferm.id,
+        estado=estado,
+        descripcion=descripcion,
+    )
+    db.add(aporte)
+    db.flush()  # Obtener aporte.id antes de lanzar el pipeline
 
-        # Subir imágenes a MinIO
-        minio_client.ensure_bucket()
-        for entry in zf.namelist():
-            if entry.startswith(img_prefix) and not entry.endswith("/"):
-                img_data = zf.read(entry)
-                filename = entry.split("/")[-1]
-                object_key = f"{ruta_base}/{filename}"
-                minio_client.upload_bytes(img_data, object_key)
+    # Ejecutar pipeline de depuración
+    try:
+        reporte_pipeline = ejecutar_pipeline(content, aporte.id)
+    except PipelineError as exc:
+        raise HTTPException(status_code=422, detail=exc.message)
 
-        # Guardar metadatos
-        row_map = {r["imagen"]: r for r in rows}
-        for entry in zf.namelist():
-            if entry.startswith(img_prefix) and not entry.endswith("/"):
-                filename = entry.split("/")[-1]
-                row = row_map.get(filename, {})
-                meta = models.MetadatoImagen(
-                    aporte_id=aporte.id,
-                    imagen=filename,
-                    **{k: v for k, v in row.items() if k != "imagen"},
-                )
-                db.add(meta)
+    if not reporte_pipeline.rutas_processed:
+        raise HTTPException(status_code=422, detail="No quedaron imágenes tras el procesamiento")
 
-        # Notificar si es colaborador
-        if current_user.rol == models.RolEnum.colaborador:
-            notif_svc.notificar_investigadores(
-                db, aporte.id,
-                f"Nuevo aporte pendiente de revisión de {current_user.nombre} para {ferm_code}",
-            )
+    # Subir CSV original a MinIO para el endpoint de descarga
+    csv_key_in_zip = f"{ferm_code}/{ferm_code}_metadata.csv"
+    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        csv_bytes = zf.read(csv_key_in_zip)
+    minio_client.upload_bytes(
+        csv_bytes,
+        f"processed/{aporte.id}/{ferm_code}_metadata.csv",
+        content_type="text/csv",
+    )
 
-        db.commit()
-        db.refresh(aporte)
-        return aporte
+    # Crear MetadatoImagen por cada imagen procesada
+    for ruta in reporte_pipeline.rutas_processed:
+        filename = ruta.split("/")[-1]
+        db.add(models.MetadatoImagen(aporte_id=aporte.id, imagen=filename))
 
-    finally:
-        os.unlink(tmp.name)
+    aporte.ruta_minio = f"processed/{aporte.id}"
+
+    if current_user.rol == models.RolEnum.colaborador:
+        notif_svc.notificar_investigadores(
+            db, aporte.id,
+            f"Nuevo aporte pendiente de revisión de {current_user.nombre} para {ferm_code}",
+        )
+
+    db.commit()
+    db.refresh(aporte)
+
+    result = schemas.AporteSubidaOut.model_validate(aporte)
+    result.reporte = schemas.ReporteDepuracionOut(**asdict(reporte_pipeline))
+    return result
 
 
 @router.get("/me", response_model=list[schemas.AporteOut])
@@ -141,6 +143,49 @@ def mis_aportes(
         .filter(models.Aporte.usuario_id == current_user.id)
         .order_by(models.Aporte.fecha_subida.desc())
         .all()
+    )
+
+
+@router.get("/{aporte_id}/descargar-dataset")
+def descargar_dataset(
+    aporte_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    aporte = db.query(models.Aporte).filter(models.Aporte.id == aporte_id).first()
+    if not aporte:
+        raise HTTPException(status_code=404, detail="Aporte no encontrado")
+    if aporte.estado != models.EstadoAporteEnum.aprobado:
+        raise HTTPException(status_code=403, detail="Solo se pueden descargar aportes aprobados")
+
+    ferm_code = aporte.fermentacion.codigo
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        # Imágenes procesadas
+        for key in minio_client.list_objects(f"processed/{aporte_id}/"):
+            if key.lower().endswith((".jpg", ".jpeg")):
+                try:
+                    data = minio_client.get_bytes(key)
+                    zf.writestr(key.split("/")[-1], data)
+                except Exception:
+                    pass
+
+        # CSV original
+        csv_key = f"processed/{aporte_id}/{ferm_code}_metadata.csv"
+        try:
+            csv_data = minio_client.get_bytes(csv_key)
+            zf.writestr(f"{ferm_code}_metadata.csv", csv_data)
+        except Exception:
+            pass
+
+    zip_buffer.seek(0)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{ferm_code}_dataset.zip"'
+        },
     )
 
 
@@ -234,8 +279,11 @@ def eliminar_aporte(
     ferm_code = aporte.fermentacion.codigo if aporte.fermentacion else f"#{aporte_id}"
 
     if aporte.ruta_minio:
-        prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
-        minio_client.delete_prefix(prefix)
+        # Cubrir rutas legacy (pre-pipeline) y rutas del pipeline
+        minio_client.delete_prefix(f"approved/{aporte_id}/")
+        minio_client.delete_prefix(f"pending/{aporte_id}/")
+        minio_client.delete_prefix(f"raw/{aporte_id}/")
+        minio_client.delete_prefix(f"processed/{aporte_id}/")
 
     notif_svc.crear_notificacion(
         db, current_user.id,

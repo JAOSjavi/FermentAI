@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, EmailStr
 from app.models import RolEnum, EstadoAporteEnum, TipoNotificacionEnum
 
@@ -146,6 +146,25 @@ class CambiarPasswordRequest(BaseModel):
     password_actual: str
     password_nuevo: str
     password_nuevo_confirm: str
+
+
+# ── Pipeline ──────────────────────────────────────────────────────────────────
+
+class ReporteDepuracionOut(BaseModel):
+    fermentacion_id: str
+    total_recibidas: int
+    total_procesadas: int
+    total_descartadas: int
+    imagenes_descartadas: List[Dict[str, Any]]
+    rutas_raw: List[str]
+    rutas_processed: List[str]
+    csv_valido: bool
+    no_conformidades_iso: List[str]
+    advertencias: List[str]
+
+
+class AporteSubidaOut(AporteOut):
+    reporte: Optional[ReporteDepuracionOut] = None
 
 
 # ── Dataset público ────────────────────────────────────────────────────────────
