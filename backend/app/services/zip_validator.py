@@ -6,16 +6,16 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 FERM_CODE_RE = re.compile(r"^FERM\d{2,}$")
-IMG_NAME_RE = re.compile(r"^FERM\d{2,}_\d{8}_\d{6}\.(jpg|jpeg)$", re.IGNORECASE)
+IMG_NAME_RE = re.compile(r".+\.(jpg|jpeg)$", re.IGNORECASE)
 MAX_IMAGE_BYTES = 20 * 1024 * 1024   # 20 MB
 MAX_ZIP_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB
 REQUIRED_CSV_COLUMNS = {
-    "imagen", "timestamp", "tiempo_horas",
+    "tiempo_horas",
     "glucosa_g_l", "fructosa_g_l", "sacarosa_g_l", "etanol_g_l",
     "acido_lactico_g_l", "acido_acetico_g_l", "acido_citrico_g_l",
     "acido_succinico_g_l", "acido_malico_g_l", "acido_oxalico_g_l",
     "acido_formico_g_l",
-    "intervalo_incertidumbre_min", "validado_asesor", "observaciones",
+    "validado_asesor", "observaciones",
 }
 
 
@@ -98,22 +98,12 @@ def validate_zip(zip_path: str, zip_size_bytes: int) -> ValidationResult:
         errors.append(f"Columnas faltantes en CSV: {sorted(missing_cols)}")
         return ValidationResult(False, errors, ferm_code)
 
-    # Regla 7: correspondencia imágenes ↔ CSV + Regla 8: valores válidos
+    # Regla 7: valores numéricos válidos
     csv_rows = list(reader)
-    csv_image_names = {row["imagen"].strip() for row in csv_rows}
     zip_image_names = {e.split("/")[-1] for e in image_entries}
 
-    only_in_zip = zip_image_names - csv_image_names
-    only_in_csv = csv_image_names - zip_image_names
-    if only_in_zip:
-        errors.append(f"Imágenes sin fila en CSV: {sorted(only_in_zip)}")
-    if only_in_csv:
-        errors.append(f"Filas en CSV sin imagen correspondiente: {sorted(only_in_csv)}")
-
-    # Regla 8: valores válidos
     for i, row in enumerate(csv_rows, start=2):
-        row_id = row.get("imagen", f"fila {i}")
-        _validate_row(row, row_id, errors)
+        _validate_row(row, f"fila {i}", errors)
 
     if errors:
         return ValidationResult(False, errors, ferm_code)

@@ -60,7 +60,7 @@ def startup():
     try:
         investigators = [
             {"nombre": "Jesús David Coral", "email": "jesus.coral@ucc.edu.co", "password": "investigador123"},
-            {"nombre": "Daniel Fernando Coral", "email": "daniel.coral@ucc.edu.co", "password": "investigador123"},
+            {"nombre": "Daniel Fernando Arteaga", "email": "daniel.arteaga@ucc.edu.co", "password": "investigador123"},
         ]
         for inv in investigators:
             if not db.query(models.User).filter(models.User.email == inv["email"]).first():

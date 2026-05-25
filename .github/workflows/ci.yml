@@ -28,6 +28,10 @@ jobs:
         run: python -m compileall app/ -q
         working-directory: backend
 
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+        working-directory: backend
+
   # ──────────────────────────────────────────────────
   # Frontend: type-check + Next.js build
   # ──────────────────────────────────────────────────
