@@ -25,7 +25,7 @@ def _get_s3_presign():
     """Cliente con el endpoint público para presigned URLs (solo cómputo local, sin HTTP)."""
     global _s3_presign
     if _s3_presign is None:
-        protocol = "https" if settings.MINIO_SECURE else "http"
+        protocol = "https" if settings.MINIO_PUBLIC_SECURE else "http"
         _s3_presign = boto3.client(
             "s3",
             endpoint_url=f"{protocol}://{settings.MINIO_PUBLIC_ENDPOINT}",

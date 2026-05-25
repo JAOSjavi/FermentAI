@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str = "minioadmin123"
     MINIO_BUCKET: str = "fermentai-datasets"
     MINIO_SECURE: bool = False
+    MINIO_PUBLIC_SECURE: bool = False  # True en producción con HTTPS
 
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
