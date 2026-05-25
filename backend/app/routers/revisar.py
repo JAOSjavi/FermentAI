@@ -148,8 +148,12 @@ def aprobar_eliminacion(
     colaborador_id = aporte.usuario_id
 
     if aporte.ruta_minio:
-        prefix = f"{'approved' if aporte.estado == models.EstadoAporteEnum.aprobado else 'pending'}/{aporte_id}/"
-        minio_client.delete_prefix(prefix)
+        try:
+            for prefix in [f"approved/{aporte_id}/", f"pending/{aporte_id}/",
+                           f"raw/{aporte_id}/", f"processed/{aporte_id}/"]:
+                minio_client.delete_prefix(prefix)
+        except Exception:
+            pass
 
     notif_svc.crear_notificacion(
         db, colaborador_id,
