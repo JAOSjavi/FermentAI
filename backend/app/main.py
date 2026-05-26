@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from app.config import settings
 from app.database import engine, Base, SessionLocal
@@ -42,6 +43,32 @@ app.include_router(reset_password.router)
 app.include_router(ajustes.router)
 
 
+def _migrate_metadatos_imagenes():
+    """Migración idempotente: timestamp→ferm_fecha_hora, elimina tiempo_horas."""
+    with engine.begin() as conn:
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='metadatos_imagenes' AND column_name='timestamp'
+                ) AND NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='metadatos_imagenes' AND column_name='ferm_fecha_hora'
+                ) THEN
+                    ALTER TABLE metadatos_imagenes RENAME COLUMN "timestamp" TO ferm_fecha_hora;
+                END IF;
+
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='metadatos_imagenes' AND column_name='tiempo_horas'
+                ) THEN
+                    ALTER TABLE metadatos_imagenes DROP COLUMN tiempo_horas;
+                END IF;
+            END $$;
+        """))
+
+
 @app.on_event("startup")
 def startup():
     # Esperar a que PostgreSQL esté listo (hasta 30 s)
@@ -56,6 +83,7 @@ def startup():
         raise RuntimeError("No se pudo conectar a PostgreSQL tras 30 segundos")
 
     Base.metadata.create_all(bind=engine)
+    _migrate_metadatos_imagenes()
     minio_client.ensure_bucket()
 
     db = SessionLocal()
