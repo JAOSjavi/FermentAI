@@ -9,10 +9,16 @@ from app.database import engine, Base, SessionLocal
 from app import models
 from app.auth import hash_password
 from app.routers import auth, aportes, revisar, fermentaciones, notificaciones, reset_password, ajustes
+from app import minio_client
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="FermentAI API", version="1.0.0")
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception: %s", exc, exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
 
 _cors_set = {o.strip().strip('"\'') for o in settings.BACKEND_CORS_ORIGINS.split(",") if o.strip()}
 if settings.FRONTEND_URL:
@@ -25,14 +31,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.middleware("http")
-async def unhandled_exception_middleware(request: Request, call_next):
-    try:
-        return await call_next(request)
-    except Exception as exc:
-        logger.error("Unhandled exception: %s", exc, exc_info=True)
-        return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
 
 
 app.include_router(auth.router)
@@ -58,6 +56,7 @@ def startup():
         raise RuntimeError("No se pudo conectar a PostgreSQL tras 30 segundos")
 
     Base.metadata.create_all(bind=engine)
+    minio_client.ensure_bucket()
 
     db = SessionLocal()
     try:
