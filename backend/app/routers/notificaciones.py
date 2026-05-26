@@ -51,3 +51,15 @@ def leer_todas(
     ).update({"leida": True})
     db.commit()
     return {"ok": True}
+
+
+@router.delete("/me")
+def vaciar_bandeja(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db.query(models.Notificacion).filter(
+        models.Notificacion.usuario_id == current_user.id,
+    ).delete()
+    db.commit()
+    return {"ok": True}

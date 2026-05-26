@@ -1,9 +1,9 @@
 "use client";
-import { Bell, CheckCheck, ChevronRight, AlertCircle } from "lucide-react";
+import { Bell, CheckCheck, ChevronRight, AlertCircle, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNotificaciones, useLeerTodas, useMarcarLeida } from "@/hooks/useNotificaciones";
+import { useNotificaciones, useLeerTodas, useMarcarLeida, useVaciarBandeja } from "@/hooks/useNotificaciones";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TipoNotificacion, Notificacion } from "@/types";
@@ -37,6 +37,7 @@ export default function NotificacionesPage() {
   const { data: notifs, isLoading, isError } = useNotificaciones();
   const { mutate: leerTodas } = useLeerTodas();
   const { mutate: marcarLeida } = useMarcarLeida();
+  const { mutate: vaciarBandeja, isPending: vaciando } = useVaciarBandeja();
 
   function handleClick(notif: Notificacion) {
     if (!notif.leida) marcarLeida(notif.id);
@@ -55,11 +56,25 @@ export default function NotificacionesPage() {
             {unread > 0 ? `${unread} sin leer` : "Todas leídas"}
           </p>
         </div>
-        {unread > 0 && (
-          <Button variant="outline" size="sm" onClick={() => leerTodas()}>
-            <CheckCheck className="h-4 w-4" />
-            Marcar todas como leídas
-          </Button>
+        {notifs && notifs.length > 0 && (
+          <div className="flex items-center gap-2">
+            {unread > 0 && (
+              <Button variant="outline" size="sm" onClick={() => leerTodas()}>
+                <CheckCheck className="h-4 w-4" />
+                Marcar todas como leídas
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={vaciando}
+              onClick={() => vaciarBandeja()}
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200 hover:border-red-300"
+            >
+              <Trash2 className="h-4 w-4" />
+              Vaciar bandeja
+            </Button>
+          </div>
         )}
       </div>
 

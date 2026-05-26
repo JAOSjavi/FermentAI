@@ -31,3 +31,12 @@ export function useLeerTodas() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notificaciones", user?.id] }),
   });
 }
+
+export function useVaciarBandeja() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete("/api/notificaciones/me").then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notificaciones", user?.id] }),
+  });
+}
