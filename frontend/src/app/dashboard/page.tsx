@@ -36,9 +36,8 @@ const roleTokens = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { data: misAportes } = useMisAportes();
-  const { data: pendientes } = usePendientes();
-
   const isInvestigador   = user?.rol === "investigador";
+  const { data: pendientes } = usePendientes(isInvestigador);
   const role             = isInvestigador ? "investigador" : "colaborador";
   const rt               = roleTokens[role];
   const pendientesCount  = pendientes?.length ?? 0;

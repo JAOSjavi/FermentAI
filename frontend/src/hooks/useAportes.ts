@@ -23,10 +23,11 @@ export function useAporteDetalle(id: number, forRevision = false) {
   });
 }
 
-export function usePendientes() {
+export function usePendientes(enabled = true) {
   return useQuery<Aporte[]>({
     queryKey: ["aportes", "pendientes"],
     queryFn: () => api.get("/api/revisar/pendientes").then((r) => r.data),
+    enabled,
   });
 }
 
