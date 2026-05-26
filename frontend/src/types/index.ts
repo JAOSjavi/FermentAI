@@ -34,8 +34,7 @@ export interface MetadatoImagen {
   id: number;
   aporte_id: number;
   imagen: string;
-  timestamp?: string;
-  tiempo_horas?: number;
+  ferm_fecha_hora?: string;
   glucosa_g_l?: number;
   fructosa_g_l?: number;
   sacarosa_g_l?: number;

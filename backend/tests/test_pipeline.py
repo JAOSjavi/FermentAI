@@ -10,7 +10,7 @@ from app.pipeline.exceptions import PipelineError
 from app.pipeline.reporte import ReporteDepuracion
 
 VALID_HEADER = (
-    "tiempo_horas,glucosa_g_l,fructosa_g_l,sacarosa_g_l,etanol_g_l,"
+    "ferm_fecha_hora,glucosa_g_l,fructosa_g_l,sacarosa_g_l,etanol_g_l,"
     "acido_lactico_g_l,acido_acetico_g_l,acido_citrico_g_l,"
     "acido_succinico_g_l,acido_malico_g_l,acido_oxalico_g_l,acido_formico_g_l,"
     "validado_asesor,observaciones\n"
@@ -34,7 +34,7 @@ def make_jpeg_bytes(width=1280, height=720) -> bytes:
 
 
 def make_zip_bytes(ferm_code="FERM01", extra_entries: dict | None = None) -> bytes:
-    valid_row = "0.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
+    valid_row = "20260526_093800,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
     csv_content = VALID_HEADER + valid_row
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
@@ -49,14 +49,14 @@ def make_zip_bytes(ferm_code="FERM01", extra_entries: dict | None = None) -> byt
 
 class TestPaso0CSV:
     def test_csv_valido_pasa(self):
-        csv = make_csv_bytes(["0.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,ok"])
+        csv = make_csv_bytes(["20260526_093800,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,ok"])
         reporte = make_reporte()
         _paso0_csv(csv, reporte)
         assert reporte.csv_valido is True
         assert reporte.no_conformidades_iso == []
 
     def test_columna_faltante_lanza_error(self):
-        bad = b"tiempo_horas,glucosa_g_l\n0.0,45.0\n"
+        bad = b"ferm_fecha_hora,glucosa_g_l\n20260526_093800,45.0\n"
         with pytest.raises(PipelineError, match="Columnas faltantes"):
             _paso0_csv(bad, make_reporte())
 
@@ -66,22 +66,22 @@ class TestPaso0CSV:
         with pytest.raises(PipelineError, match="Columnas no reconocidas"):
             _paso0_csv(csv, make_reporte())
 
-    def test_tiempo_horas_negativo_genera_nc(self):
-        csv = make_csv_bytes(["-1.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"])
+    def test_ferm_fecha_hora_formato_invalido_genera_nc(self):
+        csv = make_csv_bytes(["26_05_2026_9_38,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"])
         reporte = make_reporte()
         _paso0_csv(csv, reporte)
         assert reporte.csv_valido is False
-        assert any("negativo" in nc for nc in reporte.no_conformidades_iso)
+        assert any("ferm_fecha_hora" in nc for nc in reporte.no_conformidades_iso)
 
-    def test_tiempo_horas_no_monotono_genera_nc(self):
+    def test_ferm_fecha_hora_no_monotona_genera_nc(self):
         csv = make_csv_bytes([
-            "0.0,45,22,5,0,0,0,0,0,0,0,0,TRUE,",
-            "0.0,44,21,5,0,0,0,0,0,0,0,0,TRUE,",  # mismo valor → no estrictamente creciente
+            "20260526_093800,45,22,5,0,0,0,0,0,0,0,0,TRUE,",
+            "20260526_093800,44,21,5,0,0,0,0,0,0,0,0,TRUE,",  # misma fecha → no estrictamente posterior
         ])
         reporte = make_reporte()
         _paso0_csv(csv, reporte)
         assert reporte.csv_valido is False
-        assert any("no es estrictamente mayor" in nc for nc in reporte.no_conformidades_iso)
+        assert any("no es posterior" in nc for nc in reporte.no_conformidades_iso)
 
     def test_validado_asesor_invalido_genera_nc(self):
         csv = make_csv_bytes(["0.0,45,22,5,0,0,0,0,0,0,0,0,SI,"])
@@ -177,7 +177,7 @@ class TestEjecutarPipeline:
         mock_minio.ensure_bucket = MagicMock()
         mock_minio.upload_bytes = MagicMock()
 
-        valid_row = "0.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
+        valid_row = "20260526_093800,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
         csv_content = VALID_HEADER + valid_row
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
@@ -197,7 +197,7 @@ class TestEjecutarPipeline:
         mock_minio.ensure_bucket = MagicMock()
         mock_minio.upload_bytes = MagicMock()
 
-        valid_row = "0.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
+        valid_row = "20260526_093800,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,"
         csv_content = VALID_HEADER + valid_row
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:

@@ -3,6 +3,7 @@ import io
 import logging
 import re
 import zipfile
+from datetime import datetime
 
 import cv2
 import numpy as np
@@ -18,12 +19,11 @@ FERM_CODE_RE = re.compile(r"^FERM(0[1-9]|1[0-2])$")
 JPEG_MAGIC = bytes([0xFF, 0xD8, 0xFF])
 
 _NUMERIC_COLS = [
-    "tiempo_horas",
     "glucosa_g_l", "fructosa_g_l", "sacarosa_g_l", "etanol_g_l",
     "acido_lactico_g_l", "acido_acetico_g_l", "acido_citrico_g_l",
     "acido_succinico_g_l", "acido_malico_g_l", "acido_oxalico_g_l", "acido_formico_g_l",
 ]
-_REQUIRED_COLS = frozenset(_NUMERIC_COLS + ["validado_asesor", "observaciones"])
+_REQUIRED_COLS = frozenset(_NUMERIC_COLS + ["ferm_fecha_hora", "validado_asesor", "observaciones"])
 _MAX_ROWS = 500
 _TARGET_W, _TARGET_H = 1280, 720
 
@@ -207,28 +207,26 @@ def _paso0_csv(csv_bytes: bytes, reporte: ReporteDepuracion) -> None:
         raise PipelineError(f"El CSV supera las {_MAX_ROWS} filas ({len(rows)} encontradas)")
 
     nc: list[str] = []
-    prev_t: float | None = None
+    prev_dt: datetime | None = None
 
     for i, row in enumerate(rows, 1):
-        # tiempo_horas: float >= 0, sin nulos, estrictamente creciente
-        t_raw = row.get("tiempo_horas", "").strip()
-        if not t_raw:
-            nc.append(f"Fila {i}: tiempo_horas nulo")
+        # ferm_fecha_hora: formato YYYYMMDD_HHMMSS, sin nulos, estrictamente creciente
+        fdh_raw = row.get("ferm_fecha_hora", "").strip()
+        if not fdh_raw:
+            nc.append(f"Fila {i}: ferm_fecha_hora nulo")
         else:
             try:
-                t = float(t_raw)
-                if t < 0:
-                    nc.append(f"Fila {i}: tiempo_horas={t} es negativo")
-                elif prev_t is not None and t <= prev_t:
+                fdh = datetime.strptime(fdh_raw, "%Y%m%d_%H%M%S")
+                if prev_dt is not None and fdh <= prev_dt:
                     nc.append(
-                        f"Fila {i}: tiempo_horas={t} no es estrictamente mayor que fila anterior ({prev_t})"
+                        f"Fila {i}: ferm_fecha_hora={fdh_raw} no es posterior a fila anterior ({prev_dt.strftime('%Y%m%d_%H%M%S')})"
                     )
-                prev_t = t
+                prev_dt = fdh
             except ValueError:
-                nc.append(f"Fila {i}: tiempo_horas='{t_raw}' no es numérico")
+                nc.append(f"Fila {i}: ferm_fecha_hora='{fdh_raw}' no tiene formato YYYYMMDD_HHMMSS")
 
         # glucosa…acido_formico: float >= 0, sin nulos
-        for col in _NUMERIC_COLS[1:]:
+        for col in _NUMERIC_COLS:
             v = row.get(col, "").strip()
             if not v:
                 nc.append(f"Fila {i}: {col} nulo")

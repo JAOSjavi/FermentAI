@@ -10,8 +10,7 @@ def parse_metadata_csv(csv_bytes: bytes) -> List[Dict[str, Any]]:
     for row in reader:
         parsed = {
             "imagen": row.get("imagen", "").strip(),
-            "timestamp": _parse_dt(row.get("timestamp", "")),
-            "tiempo_horas": _float(row.get("tiempo_horas")),
+            "ferm_fecha_hora": _parse_ferm_fecha_hora(row.get("ferm_fecha_hora", "")),
             "glucosa_g_l": _float(row.get("glucosa_g_l")),
             "fructosa_g_l": _float(row.get("fructosa_g_l")),
             "sacarosa_g_l": _float(row.get("sacarosa_g_l")),
@@ -55,13 +54,10 @@ def _bool(val) -> bool:
     return str(val).strip().lower() in ("1", "true", "sí", "si", "yes")
 
 
-def _parse_dt(val: str):
+def _parse_ferm_fecha_hora(val) -> datetime | None:
     if not val:
         return None
-    val = val.strip()
-    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%SZ"):
-        try:
-            return datetime.strptime(val, fmt)
-        except ValueError:
-            continue
-    return None
+    try:
+        return datetime.strptime(str(val).strip(), "%Y%m%d_%H%M%S")
+    except ValueError:
+        return None

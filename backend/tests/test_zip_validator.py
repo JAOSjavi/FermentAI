@@ -7,12 +7,12 @@ import pytest
 from app.services.zip_validator import validate_zip
 
 VALID_HEADER = (
-    "tiempo_horas,glucosa_g_l,fructosa_g_l,sacarosa_g_l,etanol_g_l,"
+    "ferm_fecha_hora,glucosa_g_l,fructosa_g_l,sacarosa_g_l,etanol_g_l,"
     "acido_lactico_g_l,acido_acetico_g_l,acido_citrico_g_l,"
     "acido_succinico_g_l,acido_malico_g_l,acido_oxalico_g_l,acido_formico_g_l,"
     "validado_asesor,observaciones\n"
 )
-VALID_ROW = "0.0,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,\n"
+VALID_ROW = "20260526_093800,45.0,22.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,TRUE,\n"
 JPEG_MAGIC = b"\xff\xd8\xff" + b"\x00" * 100
 
 
@@ -96,7 +96,7 @@ class TestStructureErrors:
 
 class TestCSVErrors:
     def test_missing_columns(self):
-        bad_csv = "tiempo_horas,glucosa_g_l\n0.0,45.0\n"
+        bad_csv = "ferm_fecha_hora,glucosa_g_l\n20260526_093800,45.0\n"
         path, size = _make_zip({
             "FERM01/imagenes/foto_001.jpg": JPEG_MAGIC,
             "FERM01/FERM01_metadata.csv": bad_csv,

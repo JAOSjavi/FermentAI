@@ -51,8 +51,7 @@ class MetadatoImagenOut(BaseModel):
     id: int
     aporte_id: int
     imagen: str
-    timestamp: Optional[datetime]
-    tiempo_horas: Optional[float]
+    ferm_fecha_hora: Optional[datetime]
     glucosa_g_l: Optional[float]
     fructosa_g_l: Optional[float]
     sacarosa_g_l: Optional[float]

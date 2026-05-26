@@ -238,15 +238,14 @@ export default function RevisarDetallePage({ params }: { params: { id: string } 
                     <p className="font-semibold font-mono-code text-violet-700 truncate text-xs">
                       {imagenSeleccionada.imagen}
                     </p>
-                    {imagenSeleccionada.timestamp && (
+                    {imagenSeleccionada.ferm_fecha_hora && (
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        <span>{formatDate(imagenSeleccionada.timestamp)}</span>
+                        <span>{imagenSeleccionada.ferm_fecha_hora}</span>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-1 border-t">
                       {[
-                        ["Tiempo",       imagenSeleccionada.tiempo_horas != null       ? `${imagenSeleccionada.tiempo_horas} h`        : null],
                         ["Glucosa",      imagenSeleccionada.glucosa_g_l != null        ? `${imagenSeleccionada.glucosa_g_l} g/L`       : null],
                         ["Fructosa",     imagenSeleccionada.fructosa_g_l != null       ? `${imagenSeleccionada.fructosa_g_l} g/L`      : null],
                         ["Etanol",       imagenSeleccionada.etanol_g_l != null         ? `${imagenSeleccionada.etanol_g_l} g/L`        : null],
