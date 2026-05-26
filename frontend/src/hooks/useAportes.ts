@@ -18,6 +18,8 @@ export function useAporteDetalle(id: number, forRevision = false) {
       return api.get(url).then((r) => r.data);
     },
     enabled: !!id,
+    retry: (failureCount, error: any) =>
+      error?.response?.status !== 404 && failureCount < 3,
   });
 }
 
@@ -35,9 +37,7 @@ export function useSubirAporte() {
       const form = new FormData();
       form.append("file", file);
       if (descripcion) form.append("descripcion", descripcion);
-      return api.post<Aporte>("/api/aportes/subir", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }).then((r) => r.data);
+      return api.post<Aporte>("/api/aportes/subir", form).then((r) => r.data);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["aportes"] }),
   });

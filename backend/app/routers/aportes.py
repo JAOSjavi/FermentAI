@@ -273,8 +273,6 @@ def eliminar_aporte(
     aporte = db.query(models.Aporte).filter(models.Aporte.id == aporte_id).first()
     if not aporte:
         raise HTTPException(status_code=404, detail="Aporte no encontrado")
-    if aporte.usuario_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Solo puedes eliminar tus propios aportes")
 
     ferm_code = aporte.fermentacion.codigo if aporte.fermentacion else f"#{aporte_id}"
 

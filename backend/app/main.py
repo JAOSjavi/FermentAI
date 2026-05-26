@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="FermentAI API", version="1.0.0")
 
-origins = [o.strip() for o in settings.BACKEND_CORS_ORIGINS.split(",")]
+_cors_set = {o.strip() for o in settings.BACKEND_CORS_ORIGINS.split(",") if o.strip()}
+# Siempre permitir el FRONTEND_URL configurado (evita olvidarlo en Railway)
+if settings.FRONTEND_URL:
+    _cors_set.add(settings.FRONTEND_URL.rstrip("/"))
+origins = list(_cors_set)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

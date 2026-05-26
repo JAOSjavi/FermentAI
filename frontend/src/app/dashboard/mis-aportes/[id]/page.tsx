@@ -14,8 +14,9 @@ import { Label } from "@/components/ui/label";
 import { EstadoBadge } from "@/components/aportes/EstadoBadge";
 import { useAporteDetalle, useEditarDescripcion, useSolicitarEliminacion, useEliminarAporte, useDescargarDataset } from "@/hooks/useAportes";
 import { formatDate } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { MetadatoImagen } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -23,8 +24,15 @@ export default function AportePage({ params }: { params: { id: string } }) {
   const { id } = params;
   const router = useRouter();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const esInvestigador = user?.rol === "investigador";
-  const { data: aporte, isLoading, refetch } = useAporteDetalle(Number(id));
+  const { data: aporte, isLoading, isError, refetch } = useAporteDetalle(Number(id));
+
+  useEffect(() => {
+    if (isError) {
+      qc.invalidateQueries({ queryKey: ["aportes", "me"] });
+    }
+  }, [isError, qc]);
   const [imagenSeleccionada, setImagenSeleccionada] = useState<MetadatoImagen | null>(null);
   const [mostrarTodas, setMostrarTodas] = useState(false);
 
@@ -69,7 +77,14 @@ export default function AportePage({ params }: { params: { id: string } }) {
       <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600" />
     </div>
   );
-  if (!aporte) return <p className="text-muted-foreground">Aporte no encontrado.</p>;
+  if (isError || !aporte) return (
+    <div className="flex flex-col items-center py-24 gap-3">
+      <p className="text-muted-foreground font-medium">Este aporte ya no existe o no está disponible.</p>
+      <Button variant="ghost" size="sm" asChild>
+        <Link href="/dashboard/mis-aportes"><ArrowLeft className="h-4 w-4 mr-1" />Volver a mis aportes</Link>
+      </Button>
+    </div>
+  );
 
   const imagenes         = aporte.metadatos ?? [];
   const imagenesMostradas = mostrarTodas ? imagenes : imagenes.slice(0, 9);
